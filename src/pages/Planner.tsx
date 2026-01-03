@@ -6,6 +6,7 @@ import { Task } from '@/types'
 import WeekView from '@/components/WeekView'
 import TaskModal from '@/components/TaskModal'
 import TaskCard from '@/components/TaskCard'
+import StatsPanel from '@/components/StatsPanel'
 import { motion } from 'framer-motion'
 import { isToday, parseISO } from 'date-fns'
 
@@ -23,6 +24,7 @@ export default function Planner() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed'>('all')
   const [showCompleted, setShowCompleted] = useState(true)
   const [showTodayOnly, setShowTodayOnly] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
 
   const handleTaskEdit = (task: Task) => {
     // If searching, jump to the week containing this task
@@ -311,6 +313,14 @@ export default function Planner() {
           )}
         </div>
       </motion.header>
+
+      {/* Stats Panel */}
+      <StatsPanel 
+        tasks={tasks}
+        weekStart={weekStart}
+        isOpen={statsOpen}
+        onToggle={() => setStatsOpen(!statsOpen)}
+      />
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
