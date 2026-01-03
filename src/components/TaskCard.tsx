@@ -94,7 +94,7 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
                 {task.priority === 'high' ? '!!!' : task.priority === 'medium' ? '!!' : '!'}
               </span>
             )}
-            {task.reminder_time && task.reminder_enabled !== false && (
+            {task.reminder_time && (
               <span className="text-xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400" title={`Reminder at ${task.reminder_time}`}>
                 🔔 {task.reminder_time}
               </span>

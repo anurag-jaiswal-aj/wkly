@@ -87,17 +87,18 @@ export function useNotifications() {
 
 export function useReminderChecker(tasks: Task[], onReminder: (task: Task) => void) {
   useEffect(() => {
+    console.log('[Reminder Checker] Initializing with', tasks.length, 'tasks')
+    
     const checkReminders = () => {
       const now = new Date()
       console.log('[Reminder Checker] Running at', now.toLocaleTimeString())
-      console.log('[Reminder Checker] Checking', tasks.length, 'tasks')
       
       tasks.forEach(task => {
         // Skip completed tasks
         if (task.completed) return
 
         // Check if task has a reminder time set
-        if (task.reminder_time && task.reminder_enabled !== false) {
+        if (task.reminder_time) {
           const taskDateTime = parseISO(`${task.date}T${task.reminder_time}`)
           
           console.log(`[Reminder] Task "${task.title}" - Reminder: ${task.reminder_time}, Due: ${taskDateTime.toLocaleString()}`)
@@ -141,11 +142,15 @@ export function useReminderChecker(tasks: Task[], onReminder: (task: Task) => vo
     }
 
     // Check every minute
+    console.log('[Reminder Checker] Setting up interval')
     const interval = setInterval(checkReminders, 60000)
     
     // Check immediately on mount
     checkReminders()
 
-    return () => clearInterval(interval)
+    return () => {
+      console.log('[Reminder Checker] Cleanup - removing interval')
+      clearInterval(interval)
+    }
   }, [tasks, onReminder])
 }
