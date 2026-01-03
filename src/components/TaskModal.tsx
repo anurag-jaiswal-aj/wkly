@@ -1,0 +1,157 @@
+import { useState, FormEvent, useEffect } from 'react'
+import { Task } from '@/types'
+import { motion, AnimatePresence } from 'framer-motion'
+
+interface TaskModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (task: Partial<Task>) => void
+  task?: Task | null
+  defaultDate?: string
+}
+
+export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }: TaskModalProps) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [date, setDate] = useState('')
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | undefined>(undefined)
+
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title)
+      setDescription(task.description || '')
+      setDate(task.date)
+      setPriority(task.priority)
+    } else if (defaultDate) {
+      setTitle('')
+      setDescription('')
+      setDate(defaultDate)
+      setPriority(undefined)
+    } else {
+      setTitle('')
+      setDescription('')
+      setDate(new Date().toISOString().split('T')[0])
+      setPriority(undefined)
+    }
+  }, [task, defaultDate, isOpen])
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!title.trim()) return
+
+    onSave({
+      ...(task && { id: task.id }),
+      title: title.trim(),
+      description: description.trim() || null,
+      date,
+      completed: task?.completed || false,
+      order_index: task?.order_index || 0,
+    })
+
+    onClose()
+  }
+
+  const handleClose = () => {
+    setTitle('')
+    setDescription('')
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleClose}
+          className="absolute inset-0 bg-black/50"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: 'spring', duration: 0.3 }}
+          className="relative w-full max-w-md card p-6 z-10"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-light">
+              {task ? 'Edit Task' : 'New Task'}
+            </h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-black dark:hover:text-white text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium mb-2">
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="input-base"
+                placeholder="What needs to be done?"
+                autoFocus
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium mb-2">
+                Description <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="input-base resize-none"
+                rows={3}
+                placeholder="Add more details..."
+              />
+            </div>
+
+            <div>
+              <label htmlFor="date" className="block text-sm font-medium mb-2">
+                Date
+              </label>
+              <input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="input-base"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn-primary flex-1"
+              >
+                {task ? 'Save' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  )
+}
