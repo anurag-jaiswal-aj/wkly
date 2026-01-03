@@ -15,8 +15,6 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | undefined>(undefined)
-  const [reminderTime, setReminderTime] = useState('')
-  const [reminderEnabled, setReminderEnabled] = useState(false)
 
   useEffect(() => {
     if (task) {
@@ -24,22 +22,16 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       setDescription(task.description || '')
       setDate(task.date)
       setPriority(task.priority)
-      setReminderTime(task.reminder_time || '')
-      setReminderEnabled(task.reminder_enabled !== false && !!task.reminder_time)
     } else if (defaultDate) {
       setTitle('')
       setDescription('')
       setDate(defaultDate)
       setPriority(undefined)
-      setReminderTime('')
-      setReminderEnabled(false)
     } else {
       setTitle('')
       setDescription('')
       setDate(new Date().toISOString().split('T')[0])
       setPriority(undefined)
-      setReminderTime('')
-      setReminderEnabled(false)
     }
   }, [task, defaultDate, isOpen])
 
@@ -55,8 +47,6 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       completed: task?.completed || false,
       order_index: task?.order_index || 0,
       priority: priority,
-      reminder_time: reminderEnabled && reminderTime ? reminderTime : null,
-      reminder_enabled: reminderEnabled,
     })
 
     onClose()
@@ -184,41 +174,6 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
                   !!! High
                 </button>
               </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium">
-                  Reminder <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={reminderEnabled}
-                    onChange={(e) => setReminderEnabled(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-700"
-                  />
-                  <span className="text-xs text-gray-500">Enable</span>
-                </label>
-              </div>
-              {reminderEnabled && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <input
-                    type="time"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
-                    className="input-base"
-                    placeholder="Set reminder time"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    🔔 You'll get a notification at this time
-                  </p>
-                </motion.div>
-              )}
             </div>
 
             <div className="flex gap-3 pt-4">

@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTasks } from '@/hooks/useTasks'
 import { useTheme } from '@/hooks/useTheme'
-import { useNotifications, useReminderChecker } from '@/hooks/useNotifications'
 import { Task } from '@/types'
 import WeekView from '@/components/WeekView'
 import TaskModal from '@/components/TaskModal'
 import TaskCard from '@/components/TaskCard'
 import StatsPanel from '@/components/StatsPanel'
 import FocusMode from '@/components/FocusMode'
-import NotificationSettings from '@/components/NotificationSettings'
 import { motion } from 'framer-motion'
 import { isToday, parseISO } from 'date-fns'
 
@@ -19,19 +17,6 @@ export default function Planner() {
   const [searchQuery, setSearchQuery] = useState('')
   const { tasks, loading, createTask, updateTask, deleteTask, toggleTaskComplete, reorderTasks } = useTasks(weekStart, searchQuery)
   const { isDark, toggleTheme } = useTheme()
-  const { permission, requestPermission, notifyTaskReminder, isSupported } = useNotifications()
-
-  // Check for reminders
-  useReminderChecker(tasks, (task) => {
-    notifyTaskReminder(task)
-  })
-
-  // Request notification permission on mount
-  useEffect(() => {
-    if (isSupported && permission === 'default') {
-      // Don't auto-request, let user enable via settings
-    }
-  }, [])
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -42,7 +27,6 @@ export default function Planner() {
   const [showTodayOnly, setShowTodayOnly] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
-  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
 
   const handleTaskEdit = (task: Task) => {
     // If searching, jump to the week containing this task
@@ -71,8 +55,7 @@ export default function Planner() {
         date: taskData.date!,
         completed: false,
         order_index: 0,
-        reminder_time: taskData.reminder_time || null,
-        reminder_enabled: taskData.reminder_enabled !== false,
+        reminder_time: null,
         recurrence: null,
         priority: taskData.priority,
       })
@@ -158,24 +141,6 @@ export default function Planner() {
             >
               {isDark ? '☀' : '☾'}
             </button>
-
-            {isSupported && (
-              <button
-                onClick={() => setNotificationSettingsOpen(true)}
-                className={`text-sm transition-colors ${
-                  permission === 'granted'
-                    ? 'text-gray-900 dark:text-gray-100'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                }`}
-                title={
-                  permission === 'granted'
-                    ? 'Notifications enabled'
-                    : 'Click to enable notifications'
-                }
-              >
-                🔔
-              </button>
-            )}
 
             <button
               onClick={() => setFocusMode(true)}
@@ -434,15 +399,6 @@ export default function Planner() {
           onEdit={handleTaskEdit}
         />
       )}
-
-      {/* Notification Settings */}
-      <NotificationSettings
-        isOpen={notificationSettingsOpen}
-        onClose={() => setNotificationSettingsOpen(false)}
-        permission={permission}
-        onRequestPermission={requestPermission}
-        isSupported={isSupported}
-      />
     </div>
   )
 }
