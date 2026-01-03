@@ -127,6 +127,22 @@ export default function NotificationSettings({
                   {permission === 'denied' ? 'Blocked - Check Browser Settings' : 'Enable Notifications'}
                 </button>
               )}
+              
+              {/* Test Notification Button */}
+              {permission === 'granted' && (
+                <button
+                  onClick={() => {
+                    const testNotification = new Notification('🎉 Test Notification', {
+                      body: 'Notifications are working! You\'ll receive reminders like this.',
+                      icon: '/favicon.ico'
+                    })
+                    setTimeout(() => testNotification.close(), 5000)
+                  }}
+                  className="w-full py-3 rounded-lg border-2 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm font-medium"
+                >
+                  Send Test Notification
+                </button>
+              )}
             </div>
           )}
         </motion.div>
