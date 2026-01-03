@@ -27,6 +27,7 @@ interface WeekViewProps {
   onTaskReorder: (taskId: string, newDate: string, newOrderIndex: number) => void
   onAddTask: (date: string) => void
   onWeekChange: (date: Date) => void
+  isSearching?: boolean
 }
 
 export default function WeekView({
@@ -38,6 +39,7 @@ export default function WeekView({
   onTaskReorder,
   onAddTask,
   onWeekChange,
+  isSearching,
 }: WeekViewProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
@@ -139,6 +141,7 @@ export default function WeekView({
                 onTaskToggle={onTaskToggle}
                 onTaskDelete={onTaskDelete}
                 onAddTask={onAddTask}
+                showDatesOnTasks={isSearching}
               />
             ))}
           </div>

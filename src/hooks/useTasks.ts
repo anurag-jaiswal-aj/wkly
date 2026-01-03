@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { Task } from '@/types'
 import { startOfWeek, endOfWeek, format } from 'date-fns'
 
-export function useTasks(weekStart: Date) {
+export function useTasks(weekStart: Date, searchQuery?: string) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -13,12 +13,17 @@ export function useTasks(weekStart: Date) {
 
   const fetchTasks = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select('*')
-        .gte('date', startDate)
-        .lte('date', endDate)
         .order('order_index', { ascending: true })
+
+      // If searching, get all tasks, otherwise filter by week
+      if (!searchQuery) {
+        query = query.gte('date', startDate).lte('date', endDate)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       setTasks(data || [])
@@ -27,7 +32,7 @@ export function useTasks(weekStart: Date) {
     } finally {
       setLoading(false)
     }
-  }, [startDate, endDate])
+  }, [startDate, endDate, searchQuery])
 
   useEffect(() => {
     fetchTasks()
@@ -63,10 +68,22 @@ export function useTasks(weekStart: Date) {
       .select()
       .single()
 
+    if (!error && data) {
+      // Optimistically add to local state
+      setTasks(prevTasks => [...prevTasks, data])
+    }
+
     return { data, error }
   }
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
+    // Optimistic update
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === id ? { ...task, ...updates } : task
+      )
+    )
+    
     const { data, error } = await supabase
       .from('tasks')
       .update(updates)
@@ -74,20 +91,52 @@ export function useTasks(weekStart: Date) {
       .select()
       .single()
 
+    // Revert on error
+    if (error) {
+      fetchTasks()
+    }
+
     return { data, error }
   }
 
   const deleteTask = async (id: string) => {
+    // Optimistically remove from local state
+    const previousTasks = tasks
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== id))
+    
     const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('id', id)
 
+    // Revert on error
+    if (error) {
+      setTasks(previousTasks)
+    }
+
     return { error }
   }
 
   const toggleTaskComplete = async (id: string, completed: boolean) => {
-    return updateTask(id, { completed })
+    // Optimistic update
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === id ? { ...task, completed } : task
+      )
+    )
+    
+    const result = await updateTask(id, { completed })
+    
+    // Revert on error
+    if (result.error) {
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === id ? { ...task, completed: !completed } : task
+        )
+      )
+    }
+    
+    return result
   }
 
   const reorderTasks = async (taskId: string, newDate: string, newOrderIndex: number) => {

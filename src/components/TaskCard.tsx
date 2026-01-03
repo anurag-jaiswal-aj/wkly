@@ -2,15 +2,17 @@ import { Task } from '@/types'
 import { motion } from 'framer-motion'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { format, parseISO } from 'date-fns'
 
 interface TaskCardProps {
   task: Task
   onEdit: (task: Task) => void
   onToggle: (id: string, completed: boolean) => void
   onDelete: (id: string) => void
+  showDate?: boolean
 }
 
-export default function TaskCard({ task, onEdit, onToggle, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -78,6 +80,11 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete }: TaskCardP
             <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
               {task.title}
             </p>
+            {showDate && (
+              <span className="text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                {format(parseISO(task.date), 'MMM d')}
+              </span>
+            )}
             {task.priority && (
               <span className={`text-xs px-1.5 py-0.5 rounded ${
                 task.priority === 'high' ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black' :

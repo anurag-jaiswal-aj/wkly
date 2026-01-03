@@ -11,6 +11,7 @@ interface DayColumnProps {
   onTaskToggle: (id: string, completed: boolean) => void
   onTaskDelete: (id: string) => void
   onAddTask: (date: string) => void
+  showDatesOnTasks?: boolean
 }
 
 export default function DayColumn({
@@ -20,6 +21,7 @@ export default function DayColumn({
   onTaskToggle,
   onTaskDelete,
   onAddTask,
+  showDatesOnTasks,
 }: DayColumnProps) {
   const dateStr = format(date, 'yyyy-MM-dd')
   const { setNodeRef, isOver } = useDroppable({
@@ -59,16 +61,25 @@ export default function DayColumn({
               onEdit={onTaskEdit}
               onToggle={onTaskToggle}
               onDelete={onTaskDelete}
+              showDate={showDatesOnTasks}
             />
           ))}
         </SortableContext>
 
+        {tasks.length === 0 && !isOver && (
+          <div className="text-center py-12 text-gray-400 text-sm">
+            <div className="mb-2 text-2xl">·</div>
+            <p>No tasks yet</p>
+          </div>
+        )}
+
         <button
           onClick={() => onAddTask(dateStr)}
-          className="w-full py-2 text-xs text-gray-400 hover:text-black dark:hover:text-white 
+          className="w-full py-2.5 text-sm text-gray-400 hover:text-black dark:hover:text-white 
                      border border-dashed border-gray-300 dark:border-gray-700
-                     hover:border-gray-400 dark:hover:border-gray-500
-                     transition-colors mt-2"
+                     hover:border-gray-500 dark:hover:border-gray-500
+                     hover:bg-gray-50 dark:hover:bg-gray-900
+                     transition-all mt-2 rounded"
         >
           + Add task
         </button>

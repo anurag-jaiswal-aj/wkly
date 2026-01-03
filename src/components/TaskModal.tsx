@@ -46,6 +46,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       date,
       completed: task?.completed || false,
       order_index: task?.order_index || 0,
+      priority: priority,
     })
 
     onClose()
@@ -132,6 +133,47 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
                 className="input-base"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Priority <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPriority(priority === 'low' ? undefined : 'low')}
+                  className={`flex-1 py-2 px-3 text-sm rounded border transition-all ${
+                    priority === 'low'
+                      ? 'bg-gray-300 dark:bg-gray-700 border-gray-400 dark:border-gray-600'
+                      : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900'
+                  }`}
+                >
+                  ! Low
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPriority(priority === 'medium' ? undefined : 'medium')}
+                  className={`flex-1 py-2 px-3 text-sm rounded border transition-all ${
+                    priority === 'medium'
+                      ? 'bg-gray-600 dark:bg-gray-400 text-white dark:text-black border-gray-700 dark:border-gray-300'
+                      : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900'
+                  }`}
+                >
+                  !! Medium
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPriority(priority === 'high' ? undefined : 'high')}
+                  className={`flex-1 py-2 px-3 text-sm rounded border transition-all ${
+                    priority === 'high'
+                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black border-black dark:border-gray-200'
+                      : 'border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900'
+                  }`}
+                >
+                  !!! High
+                </button>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">
