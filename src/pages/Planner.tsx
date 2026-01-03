@@ -7,6 +7,7 @@ import WeekView from '@/components/WeekView'
 import TaskModal from '@/components/TaskModal'
 import TaskCard from '@/components/TaskCard'
 import StatsPanel from '@/components/StatsPanel'
+import FocusMode from '@/components/FocusMode'
 import { motion } from 'framer-motion'
 import { isToday, parseISO } from 'date-fns'
 
@@ -25,6 +26,7 @@ export default function Planner() {
   const [showCompleted, setShowCompleted] = useState(true)
   const [showTodayOnly, setShowTodayOnly] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
 
   const handleTaskEdit = (task: Task) => {
     // If searching, jump to the week containing this task
@@ -138,6 +140,14 @@ export default function Planner() {
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? '☀' : '☾'}
+            </button>
+
+            <button
+              onClick={() => setFocusMode(true)}
+              className="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm"
+              title="Focus Mode - Today's tasks with Pomodoro timer"
+            >
+              🎯 Focus
             </button>
 
             <button
@@ -379,6 +389,16 @@ export default function Planner() {
         task={editingTask}
         defaultDate={defaultDate}
       />
+
+      {/* Focus Mode */}
+      {focusMode && (
+        <FocusMode
+          tasks={tasks}
+          onClose={() => setFocusMode(false)}
+          onToggle={toggleTaskComplete}
+          onEdit={handleTaskEdit}
+        />
+      )}
     </div>
   )
 }
