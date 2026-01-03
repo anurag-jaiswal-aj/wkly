@@ -7,6 +7,7 @@ import WeekView from '@/components/WeekView'
 import TaskModal from '@/components/TaskModal'
 import TaskCard from '@/components/TaskCard'
 import { motion } from 'framer-motion'
+import { isToday, parseISO } from 'date-fns'
 
 export default function Planner() {
   const { user, signOut } = useAuth()
@@ -18,6 +19,10 @@ export default function Planner() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [defaultDate, setDefaultDate] = useState<string>('')
+  const [filterPriority, setFilterPriority] = useState<'all' | 'low' | 'medium' | 'high'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed'>('all')
+  const [showCompleted, setShowCompleted] = useState(true)
+  const [showTodayOnly, setShowTodayOnly] = useState(false)
 
   const handleTaskEdit = (task: Task) => {
     // If searching, jump to the week containing this task
@@ -48,6 +53,7 @@ export default function Planner() {
         order_index: 0,
         reminder_time: null,
         recurrence: null,
+        priority: taskData.priority,
       })
     }
     setEditingTask(null)
@@ -58,12 +64,40 @@ export default function Planner() {
     await signOut()
   }
 
-  const filteredTasks = searchQuery
-    ? tasks.filter(task =>
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : tasks
+  const applyFilters = (taskList: Task[]) => {
+    let filtered = taskList
+
+    // Filter by completion status
+    if (!showCompleted) {
+      filtered = filtered.filter(t => !t.completed)
+    }
+    if (filterStatus === 'completed') {
+      filtered = filtered.filter(t => t.completed)
+    } else if (filterStatus === 'pending') {
+      filtered = filtered.filter(t => !t.completed)
+    }
+
+    // Filter by priority
+    if (filterPriority !== 'all') {
+      filtered = filtered.filter(t => t.priority === filterPriority)
+    }
+
+    // Filter by today
+    if (showTodayOnly) {
+      filtered = filtered.filter(t => isToday(parseISO(t.date)))
+    }
+
+    return filtered
+  }
+
+  const filteredTasks = applyFilters(
+    searchQuery
+      ? tasks.filter(task =>
+          task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : tasks
+  )
 
   const weekStats = {
     total: filteredTasks.length,
@@ -147,6 +181,134 @@ export default function Planner() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Filters Bar */}
+        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Filters:</span>
+          
+          {/* Priority Filter */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setFilterPriority('all')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterPriority === 'all'
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilterPriority('high')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterPriority === 'high'
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              !!! High
+            </button>
+            <button
+              onClick={() => setFilterPriority('medium')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterPriority === 'medium'
+                  ? 'bg-gray-700 dark:bg-gray-300 text-white dark:text-black'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              !! Medium
+            </button>
+            <button
+              onClick={() => setFilterPriority('low')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterPriority === 'low'
+                  ? 'bg-gray-500 dark:bg-gray-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              ! Low
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setFilterStatus('all')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterStatus === 'all'
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilterStatus('pending')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterStatus === 'pending'
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              Pending
+            </button>
+            <button
+              onClick={() => setFilterStatus('completed')}
+              className={`px-3 py-1 text-xs rounded transition-all ${
+                filterStatus === 'completed'
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              Completed
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+
+          {/* Quick Toggles */}
+          <button
+            onClick={() => setShowTodayOnly(!showTodayOnly)}
+            className={`px-3 py-1 text-xs rounded transition-all ${
+              showTodayOnly
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+            }`}
+          >
+            Today Only
+          </button>
+
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={`px-3 py-1 text-xs rounded transition-all ${
+              !showCompleted
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
+                : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+            }`}
+          >
+            {showCompleted ? 'Hide Completed' : 'Show Completed'}
+          </button>
+
+          {/* Clear Filters */}
+          {(filterPriority !== 'all' || filterStatus !== 'all' || showTodayOnly || !showCompleted) && (
+            <>
+              <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+              <button
+                onClick={() => {
+                  setFilterPriority('all')
+                  setFilterStatus('all')
+                  setShowTodayOnly(false)
+                  setShowCompleted(true)
+                }}
+                className="px-3 py-1 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                Clear all
+              </button>
+            </>
+          )}
         </div>
       </motion.header>
 
