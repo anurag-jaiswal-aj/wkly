@@ -7,6 +7,7 @@ export interface Task {
   completed: boolean
   order_index: number
   reminder_time: string | null
+  reminder_enabled?: boolean
   recurrence: string | null
   created_at: string
   priority?: 'low' | 'medium' | 'high'
