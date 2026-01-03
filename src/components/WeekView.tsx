@@ -101,18 +101,18 @@ export default function WeekView({
         <div className="flex items-center gap-4">
           <button
             onClick={goToPreviousWeek}
-            className="text-gray-500 hover:text-black dark:hover:text-white text-xl"
+            className="text-gray-500 hover:text-black dark:hover:text-white"
           >
-            ←
+            <span className="material-symbols-outlined">chevron_left</span>
           </button>
           <h2 className="text-lg font-light">
             {format(days[0], 'MMM d')} – {format(days[6], 'MMM d, yyyy')}
           </h2>
           <button
             onClick={goToNextWeek}
-            className="text-gray-500 hover:text-black dark:hover:text-white text-xl"
+            className="text-gray-500 hover:text-black dark:hover:text-white"
           >
-            →
+            <span className="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
 

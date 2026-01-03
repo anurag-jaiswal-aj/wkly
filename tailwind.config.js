@@ -25,8 +25,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['SF Mono', 'Monaco', 'Consolas', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['Inter', 'SF Mono', 'Monaco', 'Consolas', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',

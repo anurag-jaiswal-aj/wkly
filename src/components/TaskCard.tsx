@@ -110,9 +110,9 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
             }
           }}
           className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900
-                     dark:hover:text-gray-100 text-lg transition-all hover:scale-125 flex-shrink-0"
+                     dark:hover:text-gray-100 transition-all flex-shrink-0"
         >
-          ×
+          <span className="material-symbols-outlined text-xl">close</span>
         </button>
       </div>
     </motion.div>

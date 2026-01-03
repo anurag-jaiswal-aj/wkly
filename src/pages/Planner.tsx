@@ -136,18 +136,19 @@ export default function Planner() {
 
             <button
               onClick={toggleTheme}
-              className="text-gray-500 hover:text-black dark:hover:text-white text-sm transition-colors"
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {isDark ? '☀' : '☾'}
+              <span className="material-symbols-outlined text-xl">{isDark ? 'light_mode' : 'dark_mode'}</span>
             </button>
 
             <button
               onClick={() => setFocusMode(true)}
-              className="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm"
+              className="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm flex items-center gap-1"
               title="Focus Mode - Today's tasks with Pomodoro timer"
             >
-              🎯 Focus
+              <span className="material-symbols-outlined text-base">target</span>
+              Focus
             </button>
 
             <button
@@ -343,7 +344,7 @@ export default function Planner() {
               <div className="space-y-2">
                 {filteredTasks.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
-                    <div className="mb-2 text-4xl">🔍</div>
+                    <div className="mb-2 text-2xl font-light">No Results</div>
                     <p>No tasks found matching "{searchQuery}"</p>
                   </div>
                 ) : (

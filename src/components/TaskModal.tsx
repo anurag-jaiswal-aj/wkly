@@ -84,9 +84,9 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
             </h2>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-black dark:hover:text-white text-2xl"
+              className="text-gray-400 hover:text-black dark:hover:text-white"
             >
-              ×
+              <span className="material-symbols-outlined text-xl">close</span>
             </button>
           </div>
 

@@ -123,7 +123,7 @@ export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusMod
             className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Exit Focus Mode"
           >
-            ✕
+            <span className="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
 
@@ -132,7 +132,7 @@ export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusMod
           <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800">
             <div className="text-center mb-6">
               <div className="inline-block px-4 py-1 rounded-full bg-gray-200 dark:bg-gray-800 text-sm mb-4">
-                {timerMode === 'work' ? '🎯 Work Session' : '☕ Break Time'}
+                {timerMode === 'work' ? 'Work Session' : 'Break Time'}
               </div>
               <div className="text-7xl font-light mb-2 tabular-nums">
                 {formatTime(timeLeft)}
@@ -256,7 +256,6 @@ export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusMod
                         onClick={() => onToggle(task.id)}
                         className="mt-1 w-5 h-5 rounded bg-gray-900 dark:bg-gray-100 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors flex-shrink-0 flex items-center justify-center"
                       >
-                        <span className="text-white dark:text-black text-xs">✓</span>
                       </button>
                       <p className="text-sm leading-relaxed line-through text-gray-500 break-words flex-1 min-w-0">
                         {task.title}
@@ -271,7 +270,7 @@ export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusMod
           {/* Empty State */}
           {todayTasks.length === 0 && (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">🎯</div>
+              <div className="text-4xl font-light mb-4">No Tasks</div>
               <h3 className="text-xl font-light mb-2">No tasks for today</h3>
               <p className="text-sm text-gray-500">Exit focus mode to add tasks</p>
             </div>

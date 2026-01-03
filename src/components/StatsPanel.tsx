@@ -101,14 +101,14 @@ export default function StatsPanel({ tasks, weekStart, isOpen, onToggle }: Stats
         className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
       >
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          📊 Weekly Stats
+          Weekly Stats
         </span>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
           className="text-gray-500"
         >
-          ▼
+          <span className="material-symbols-outlined text-base">expand_more</span>
         </motion.span>
       </button>
 
@@ -146,7 +146,7 @@ export default function StatsPanel({ tasks, weekStart, isOpen, onToggle }: Stats
                 {trend > 0 ? '+' : ''}{trend}%
               </div>
               <div className="text-xs text-gray-500">
-                {trend > 0 ? '↗ improving' : trend < 0 ? '↘ declining' : '→ stable'}
+                {trend > 0 ? '+ improving' : trend < 0 ? '- declining' : '= stable'}
               </div>
             </div>
 

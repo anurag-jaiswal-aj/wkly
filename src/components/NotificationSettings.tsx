@@ -34,18 +34,18 @@ export default function NotificationSettings({
           className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-light">🔔 Notifications</h2>
+            <h2 className="text-xl font-light">Notifications</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-xl"
+              className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
-              ×
+              <span className="material-symbols-outlined text-xl">close</span>
             </button>
           </div>
 
           {!isSupported ? (
             <div className="text-center py-8">
-              <div className="text-4xl mb-3">❌</div>
+              <div className="text-2xl font-light mb-3">Not Supported</div>
               <p className="text-gray-600 dark:text-gray-400">
                 Your browser doesn't support notifications
               </p>
@@ -63,7 +63,7 @@ export default function NotificationSettings({
                       ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
                       : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
                   }`}>
-                    {permission === 'granted' ? '✓ Enabled' : permission === 'denied' ? '✗ Blocked' : '⚠ Not Set'}
+                    {permission === 'granted' ? 'Enabled' : permission === 'denied' ? 'Blocked' : 'Not Set'}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500">
@@ -81,7 +81,7 @@ export default function NotificationSettings({
                 <h3 className="text-sm font-medium mb-3">Features</h3>
                 <div className="space-y-2">
                   <div className="flex items-start gap-3 text-sm">
-                    <span className="text-lg">⏰</span>
+                    <span className="text-sm font-medium text-gray-400">-</span>
                     <div>
                       <div className="font-medium">Task Reminders</div>
                       <div className="text-xs text-gray-500">
@@ -90,7 +90,7 @@ export default function NotificationSettings({
                     </div>
                   </div>
                   <div className="flex items-start gap-3 text-sm">
-                    <span className="text-lg">📅</span>
+                    <span className="text-sm font-medium text-gray-400">-</span>
                     <div>
                       <div className="font-medium">Daily Summary</div>
                       <div className="text-xs text-gray-500">
@@ -132,7 +132,7 @@ export default function NotificationSettings({
               {permission === 'granted' && (
                 <button
                   onClick={() => {
-                    const testNotification = new Notification('🎉 Test Notification', {
+                    const testNotification = new Notification('Test Notification', {
                       body: 'Notifications are working! You\'ll receive reminders like this.',
                       icon: '/favicon.ico'
                     })
