@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { format, parseISO } from 'date-fns'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import ConfirmDialog from './ConfirmDialog'
 
 interface TaskCardProps {
   task: Task
@@ -16,6 +17,7 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }: TaskCardProps) {
   const [subtasks, setSubtasks] = useState<Subtask[]>([])
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
   useEffect(() => {
     const fetchSubtasks = async () => {
@@ -151,9 +153,7 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
         <button
           onClick={(e) => {
             e.stopPropagation()
-            if (confirm('Delete this task?')) {
-              onDelete(task.id)
-            }
+            setShowDeleteConfirm(true)
           }}
           className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900
                      dark:hover:text-gray-100 transition-all flex-shrink-0"
@@ -161,6 +161,16 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
           <span className="material-symbols-outlined text-xl">close</span>
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => onDelete(task.id)}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </motion.div>
   )
 }
