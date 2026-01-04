@@ -214,7 +214,9 @@ export default function Planner() {
   }
 
   const handleSignOut = async () => {
-    await signOut()
+    if (confirm('Are you sure you want to sign out?')) {
+      await signOut()
+    }
   }
 
   const applyFilters = (taskList: Task[]) => {
