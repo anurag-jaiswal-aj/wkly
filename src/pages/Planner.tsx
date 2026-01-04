@@ -56,7 +56,8 @@ export default function Planner() {
         completed: false,
         order_index: 0,
         reminder_time: null,
-        recurrence: null,
+        recurrence: taskData.recurrence || null,
+        recurrence_parent_id: taskData.recurrence_parent_id || null,
         priority: taskData.priority,
       })
     }

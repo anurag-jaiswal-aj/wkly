@@ -118,6 +118,9 @@ export function useTasks(weekStart: Date, searchQuery?: string) {
   }
 
   const toggleTaskComplete = async (id: string, completed: boolean) => {
+    // Find the task to check if it's recurring
+    const task = tasks.find(t => t.id === id)
+    
     // Optimistic update
     setTasks(prevTasks =>
       prevTasks.map(task =>
@@ -134,9 +137,56 @@ export function useTasks(weekStart: Date, searchQuery?: string) {
           task.id === id ? { ...task, completed: !completed } : task
         )
       )
+      return result
+    }
+    
+    // If task is being completed AND has recurrence, create next instance
+    if (completed && task?.recurrence && task.recurrence !== 'none') {
+      const nextDate = calculateNextDate(task.date, task.recurrence)
+      
+      // Create the next recurring task
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('tasks')
+          .insert([{
+            user_id: user.id,
+            title: task.title,
+            description: task.description,
+            date: nextDate,
+            completed: false,
+            order_index: task.order_index,
+            recurrence: task.recurrence,
+            recurrence_parent_id: task.recurrence_parent_id || task.id,
+            priority: task.priority,
+            reminder_time: task.reminder_time,
+          }])
+      }
     }
     
     return result
+  }
+
+  // Helper function to calculate next occurrence date
+  const calculateNextDate = (currentDate: string, recurrence: string): string => {
+    const date = new Date(currentDate)
+    
+    switch (recurrence) {
+      case 'daily':
+        date.setDate(date.getDate() + 1)
+        break
+      case 'weekly':
+        date.setDate(date.getDate() + 7)
+        break
+      case 'biweekly':
+        date.setDate(date.getDate() + 14)
+        break
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1)
+        break
+    }
+    
+    return date.toISOString().split('T')[0]
   }
 
   const reorderTasks = async (taskId: string, newDate: string, newOrderIndex: number) => {

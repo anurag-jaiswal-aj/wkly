@@ -15,6 +15,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | undefined>(undefined)
+  const [recurrence, setRecurrence] = useState<'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'>('none')
 
   useEffect(() => {
     if (task) {
@@ -22,16 +23,19 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       setDescription(task.description || '')
       setDate(task.date)
       setPriority(task.priority)
+      setRecurrence(task.recurrence || 'none')
     } else if (defaultDate) {
       setTitle('')
       setDescription('')
       setDate(defaultDate)
       setPriority(undefined)
+      setRecurrence('none')
     } else {
       setTitle('')
       setDescription('')
       setDate(new Date().toISOString().split('T')[0])
       setPriority(undefined)
+      setRecurrence('none')
     }
   }, [task, defaultDate, isOpen])
 
@@ -47,6 +51,8 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       completed: task?.completed || false,
       order_index: task?.order_index || 0,
       priority: priority,
+      recurrence: recurrence === 'none' ? null : recurrence,
+      recurrence_parent_id: task?.recurrence_parent_id || null,
     })
 
     onClose()
@@ -174,6 +180,28 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
                   !!! High
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Repeat <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <select
+                value={recurrence}
+                onChange={(e) => setRecurrence(e.target.value as any)}
+                className="input-base"
+              >
+                <option value="none">Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+              {recurrence !== 'none' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  <span className="material-symbols-outlined text-xs align-middle">loop</span> Task will auto-create when completed
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">

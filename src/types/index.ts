@@ -8,7 +8,8 @@ export interface Task {
   order_index: number
   reminder_time: string | null
   reminder_enabled?: boolean
-  recurrence: string | null
+  recurrence: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | null
+  recurrence_parent_id?: string | null
   created_at: string
   priority?: 'low' | 'medium' | 'high'
   tags?: string[]
