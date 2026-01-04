@@ -20,6 +20,8 @@ export interface Subtask {
   task_id: string
   title: string
   completed: boolean
+  order_index: number
+  created_at?: string
 }
 
 export interface User {

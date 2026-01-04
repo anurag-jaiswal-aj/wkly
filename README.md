@@ -1,16 +1,42 @@
 # Wkly - Minimalist Weekly Planner
 
-A distraction-free weekly planner with a monochrome UI, built with React, TypeScript, and Supabase.
+A modern, distraction-free weekly planner with a monochrome UI, built with React, TypeScript, and Supabase.
 
 ## ✨ Features
 
+### Core Task Management
 - **Clean Weekly View**: Monday-to-Sunday layout with today highlighted
 - **Drag & Drop**: Seamlessly move tasks between days
 - **Real-time Sync**: Instant updates across all devices via Supabase Realtime
-- **Task Management**: Create, edit, complete, and delete tasks
-- **Authentication**: Secure email/password authentication
-- **Dark Mode**: Toggle between light and dark themes
-- **Minimalist Design**: Strictly monochrome, text-first UI
+- **Search**: Find tasks across all weeks instantly
+- **Filters**: Filter by priority, status, or show today's tasks only
+
+### Advanced Task Features
+- **Priorities**: Set tasks as low (!), medium (!!), or high (!!!) priority
+- **Subtasks/Checklists**: Break down tasks into smaller actionable items with progress tracking
+- **Recurring Tasks**: Auto-create tasks daily, weekly, bi-weekly, or monthly
+- **Task Templates**: Quick-start with 8 pre-built templates (Meeting, Code Review, Workout, Content Creation, Shopping, Project Setup, Study Session, Blog Post)
+- **Task Descriptions**: Add detailed notes to your tasks
+
+### Productivity Tools
+- **Focus Mode**: Pomodoro timer with today's tasks for deep work sessions
+- **Weekly Stats**: Track completion rates and productivity trends
+- **Keyboard Shortcuts**: Navigate and create tasks without touching the mouse (press `?` to see all shortcuts)
+- **Dark Mode**: Easy on the eyes, works in any lighting
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+N` | Create new task |
+| `Ctrl+K` or `/` | Focus search |
+| `Ctrl+F` | Toggle focus mode |
+| `Ctrl+S` | Toggle weekly stats |
+| `Ctrl+D` | Toggle dark mode |
+| `Ctrl+T` | Go to today |
+| `Ctrl+←/→` | Navigate weeks |
+| `Esc` | Close modal/focus mode |
+| `?` | Show keyboard shortcuts help |
 
 ## 🛠 Tech Stack
 
@@ -18,9 +44,10 @@ A distraction-free weekly planner with a monochrome UI, built with React, TypeSc
 - **React 18** with TypeScript
 - **Vite** for blazing-fast development
 - **Tailwind CSS** with custom grayscale palette
-- **Framer Motion** for subtle animations
+- **Framer Motion** for smooth animations
 - **@dnd-kit** for drag-and-drop functionality
 - **date-fns** for date manipulation
+- **Google Fonts** (Inter) and **Material Symbols** for typography and icons
 - **React Router** for navigation
 
 ### Backend
@@ -47,10 +74,13 @@ npm install
 ### 2. Set Up Supabase
 
 1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the contents of `supabase-schema.sql`
+2. Go to **SQL Editor** and run these migrations in order:
+   - `supabase-schema.sql` - Creates main tasks table
+   - `supabase-migration-recurrence.sql` - Adds recurring tasks support
+   - `supabase-migration-subtasks.sql` - Adds subtasks/checklists support
 3. This will create:
-   - `tasks` table
-   - `subtasks` table
+   - `tasks` table with priorities and recurrence
+   - `subtasks` table for checklists
    - Indexes for performance
    - Row Level Security policies
 

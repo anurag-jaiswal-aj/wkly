@@ -1,8 +1,10 @@
-import { Task } from '@/types'
+import { Task, Subtask } from '@/types'
 import { motion } from 'framer-motion'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { format, parseISO } from 'date-fns'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface TaskCardProps {
   task: Task
@@ -13,6 +15,27 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }: TaskCardProps) {
+  const [subtasks, setSubtasks] = useState<Subtask[]>([])
+  
+  useEffect(() => {
+    const fetchSubtasks = async () => {
+      const { data } = await supabase
+        .from('subtasks')
+        .select('*')
+        .eq('task_id', task.id)
+        .order('order_index')
+      
+      if (data) {
+        setSubtasks(data)
+      }
+    }
+    
+    fetchSubtasks()
+  }, [task.id])
+  
+  const completedSubtasks = subtasks.filter(st => st.completed).length
+  const totalSubtasks = subtasks.length
+  
   const {
     attributes,
     listeners,
@@ -107,6 +130,21 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
               {task.description}
             </p>
+          )}
+          {totalSubtasks > 0 && (
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(completedSubtasks / totalSubtasks) * 100}%` }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="h-full bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-gray-100 rounded-full"
+                />
+              </div>
+              <span className={`text-xs font-medium ${completedSubtasks === totalSubtasks ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500'}`}>
+                {completedSubtasks}/{totalSubtasks}
+              </span>
+            </div>
           )}
         </div>
 

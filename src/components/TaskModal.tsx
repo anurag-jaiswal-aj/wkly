@@ -1,21 +1,26 @@
 import { useState, FormEvent, useEffect } from 'react'
-import { Task } from '@/types'
+import { Task, Subtask } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
+import { DEFAULT_TEMPLATES, TaskTemplate } from '@/data/templates'
 
 interface TaskModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (task: Partial<Task>) => void
+  onSave: (task: Partial<Task>, subtasks?: Partial<Subtask>[]) => void
   task?: Task | null
   defaultDate?: string
+  existingSubtasks?: Subtask[]
 }
 
-export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, existingSubtasks = [] }: TaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | undefined>(undefined)
   const [recurrence, setRecurrence] = useState<'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'>('none')
+  const [subtasks, setSubtasks] = useState<Partial<Subtask>[]>([])
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
+  const [showTemplates, setShowTemplates] = useState(false)
 
   useEffect(() => {
     if (task) {
@@ -24,20 +29,24 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       setDate(task.date)
       setPriority(task.priority)
       setRecurrence(task.recurrence || 'none')
+      setSubtasks(existingSubtasks)
     } else if (defaultDate) {
       setTitle('')
       setDescription('')
       setDate(defaultDate)
       setPriority(undefined)
       setRecurrence('none')
+      setSubtasks([])
     } else {
       setTitle('')
       setDescription('')
       setDate(new Date().toISOString().split('T')[0])
       setPriority(undefined)
       setRecurrence('none')
+      setSubtasks([])
     }
-  }, [task, defaultDate, isOpen])
+    setNewSubtaskTitle('')
+  }, [task, defaultDate, isOpen, existingSubtasks])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -53,7 +62,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
       priority: priority,
       recurrence: recurrence === 'none' ? null : recurrence,
       recurrence_parent_id: task?.recurrence_parent_id || null,
-    })
+    }, subtasks)
 
     onClose()
   }
@@ -61,7 +70,52 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
   const handleClose = () => {
     setTitle('')
     setDescription('')
+    setSubtasks([])
+    setNewSubtaskTitle('')
     onClose()
+  }
+
+  const addSubtask = () => {
+    if (!newSubtaskTitle.trim()) return
+    
+    setSubtasks([...subtasks, {
+      title: newSubtaskTitle.trim(),
+      completed: false,
+      order_index: subtasks.length,
+      task_id: task?.id
+    }])
+    setNewSubtaskTitle('')
+  }
+
+  const handleSubtaskKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addSubtask()
+    }
+  }
+
+  const applyTemplate = (template: TaskTemplate) => {
+    setTitle(template.title)
+    setDescription(template.description || '')
+    setPriority(template.priority)
+    if (template.subtasks) {
+      setSubtasks(template.subtasks.map((title, index) => ({
+        title,
+        completed: false,
+        order_index: index
+      })))
+    }
+    setShowTemplates(false)
+  }
+
+  const removeSubtask = (index: number) => {
+    setSubtasks(subtasks.filter((_, i) => i !== index))
+  }
+
+  const toggleSubtask = (index: number) => {
+    setSubtasks(subtasks.map((st, i) => 
+      i === index ? { ...st, completed: !st.completed } : st
+    ))
   }
 
   if (!isOpen) return null
@@ -82,19 +136,61 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', duration: 0.3 }}
-          className="relative w-full max-w-md card p-6 z-10"
+          className="relative w-full max-w-md card p-6 z-10 max-h-[90vh] overflow-y-auto"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-light">
               {task ? 'Edit Task' : 'New Task'}
             </h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-black dark:hover:text-white"
-            >
-              <span className="material-symbols-outlined text-xl">close</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {!task && (
+                <button
+                  type="button"
+                  onClick={() => setShowTemplates(!showTemplates)}
+                  className="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                  title="Use template"
+                >
+                  <span className="material-symbols-outlined text-xl">auto_awesome</span>
+                </button>
+              )}
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-black dark:hover:text-white"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
           </div>
+
+          {/* Templates Section */}
+          {showTemplates && !task && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800"
+            >
+              <h3 className="text-sm font-medium mb-3">Quick Templates</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {DEFAULT_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => applyTemplate(template)}
+                    className="text-left p-3 rounded bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 
+                             hover:border-gray-400 dark:hover:border-gray-600 transition-all text-sm"
+                  >
+                    <div className="font-medium mb-1">{template.name}</div>
+                    {template.subtasks && (
+                      <div className="text-xs text-gray-500">
+                        {template.subtasks.length} items
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -200,6 +296,75 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate }
               {recurrence !== 'none' && (
                 <p className="text-xs text-gray-500 mt-1">
                   <span className="material-symbols-outlined text-xs align-middle">loop</span> Task will auto-create when completed
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Checklist <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              
+              {/* Existing subtasks */}
+              {subtasks.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  <AnimatePresence>
+                    {subtasks.map((subtask, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center gap-2 p-2 rounded bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleSubtask(index)}
+                          className="w-4 h-4 rounded border-2 border-gray-400 dark:border-gray-600 flex items-center justify-center flex-shrink-0 hover:border-gray-900 dark:hover:border-gray-100 transition-colors"
+                        >
+                          {subtask.completed && (
+                            <div className="w-2 h-2 bg-gray-900 dark:bg-gray-100 rounded-sm" />
+                          )}
+                        </button>
+                        <span className={`flex-1 text-sm ${subtask.completed ? 'line-through text-gray-500' : ''}`}>
+                          {subtask.title}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeSubtask(index)}
+                          className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex-shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-base">close</span>
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Add new subtask */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={handleSubtaskKeyDown}
+                  className="input-base flex-1"
+                  placeholder="Add a checklist item... (Press Enter)"
+                />
+                <button
+                  type="button"
+                  onClick={addSubtask}
+                  disabled={!newSubtaskTitle.trim()}
+                  className="px-4 py-2 rounded bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                >
+                  Add
+                </button>
+              </div>
+              {subtasks.length > 0 && (
+                <p className="text-xs text-gray-500 mt-2">
+                  {subtasks.filter(st => st.completed).length}/{subtasks.length} items completed
                 </p>
               )}
             </div>

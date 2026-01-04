@@ -67,9 +67,13 @@ export default function DayColumn({
         </SortableContext>
 
         {tasks.length === 0 && !isOver && (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            <div className="mb-2 text-2xl">·</div>
-            <p>No tasks yet</p>
+          <div className="text-center py-8 text-gray-400 text-xs">
+            <div className="mb-2 text-3xl font-light text-gray-300 dark:text-gray-700">·</div>
+            {today ? (
+              <p className="font-medium">Start your day</p>
+            ) : (
+              <p>No tasks</p>
+            )}
           </div>
         )}
 

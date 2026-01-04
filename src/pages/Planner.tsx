@@ -1,15 +1,17 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTasks } from '@/hooks/useTasks'
 import { useTheme } from '@/hooks/useTheme'
-import { Task } from '@/types'
+import { Task, Subtask } from '@/types'
 import WeekView from '@/components/WeekView'
 import TaskModal from '@/components/TaskModal'
 import TaskCard from '@/components/TaskCard'
 import StatsPanel from '@/components/StatsPanel'
 import FocusMode from '@/components/FocusMode'
+import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal'
 import { motion } from 'framer-motion'
-import { isToday, parseISO } from 'date-fns'
+import { isToday, parseISO, startOfWeek } from 'date-fns'
+import { supabase } from '@/lib/supabase'
 
 export default function Planner() {
   const { user, signOut } = useAuth()
@@ -27,14 +29,26 @@ export default function Planner() {
   const [showTodayOnly, setShowTodayOnly] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
+  const [taskSubtasks, setTaskSubtasks] = useState<Subtask[]>([])
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const handleTaskEdit = (task: Task) => {
+  const handleTaskEdit = async (task: Task) => {
     // If searching, jump to the week containing this task
     if (searchQuery) {
       const taskDate = new Date(task.date)
       setWeekStart(taskDate)
       setSearchQuery('') // Clear search after jumping
     }
+    
+    // Fetch subtasks for this task
+    const { data } = await supabase
+      .from('subtasks')
+      .select('*')
+      .eq('task_id', task.id)
+      .order('order_index')
+    
+    setTaskSubtasks(data || [])
     setEditingTask(task)
     setIsModalOpen(true)
   }
@@ -42,14 +56,133 @@ export default function Planner() {
   const handleAddTask = (date: string) => {
     setEditingTask(null)
     setDefaultDate(date)
+    setTaskSubtasks([])
     setIsModalOpen(true)
   }
 
-  const handleSaveTask = async (taskData: Partial<Task>) => {
+  const goToToday = () => {
+    setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        // Allow Escape and Ctrl shortcuts even in inputs
+        if (e.key !== 'Escape' && !(e.ctrlKey || e.metaKey)) {
+          return
+        }
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey
+
+      // Ctrl/Cmd + N: New task
+      if (cmdOrCtrl && e.key === 'n') {
+        e.preventDefault()
+        handleAddTask(new Date().toISOString().split('T')[0])
+      }
+      // Ctrl/Cmd + K or /: Focus search
+      else if ((cmdOrCtrl && e.key === 'k') || e.key === '/') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+      // Ctrl/Cmd + F: Toggle focus mode
+      else if (cmdOrCtrl && e.key === 'f') {
+        e.preventDefault()
+        setFocusMode(!focusMode)
+      }
+      // Ctrl/Cmd + S: Toggle stats
+      else if (cmdOrCtrl && e.key === 's') {
+        e.preventDefault()
+        setStatsOpen(!statsOpen)
+      }
+      // Ctrl/Cmd + D: Toggle dark mode
+      else if (cmdOrCtrl && e.key === 'd') {
+        e.preventDefault()
+        toggleTheme()
+      }
+      // Ctrl/Cmd + T: Go to today
+      else if (cmdOrCtrl && e.key === 't') {
+        e.preventDefault()
+        goToToday()
+      }
+      // Ctrl/Cmd + Arrow: Navigate weeks
+      else if (cmdOrCtrl && e.key === 'ArrowLeft') {
+        e.preventDefault()
+        const newDate = new Date(weekStart)
+        newDate.setDate(newDate.getDate() - 7)
+        setWeekStart(newDate)
+      }
+      else if (cmdOrCtrl && e.key === 'ArrowRight') {
+        e.preventDefault()
+        const newDate = new Date(weekStart)
+        newDate.setDate(newDate.getDate() + 7)
+        setWeekStart(newDate)
+      }
+      // Escape: Close modals
+      else if (e.key === 'Escape') {
+        if (showShortcuts) {
+          setShowShortcuts(false)
+        } else if (focusMode) {
+          setFocusMode(false)
+        } else if (isModalOpen) {
+          setIsModalOpen(false)
+          setEditingTask(null)
+        }
+      }
+      // ?: Show shortcuts
+      else if (e.key === '?' && e.shiftKey) {
+        e.preventDefault()
+        setShowShortcuts(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [focusMode, isModalOpen, showShortcuts, statsOpen, weekStart, toggleTheme])
+
+  const handleSaveTask = async (taskData: Partial<Task>, subtasks: Partial<Subtask>[] = []) => {
     if (editingTask) {
       await updateTask(editingTask.id, taskData)
+      
+      // Handle subtasks
+      // Delete removed subtasks
+      const existingIds = taskSubtasks.map(st => st.id)
+      const newIds = subtasks.filter(st => st.id).map(st => st.id)
+      const toDelete = existingIds.filter(id => !newIds.includes(id))
+      
+      for (const id of toDelete) {
+        await supabase.from('subtasks').delete().eq('id', id)
+      }
+      
+      // Update or create subtasks
+      for (const subtask of subtasks) {
+        if (subtask.id) {
+          // Update existing
+          await supabase
+            .from('subtasks')
+            .update({
+              title: subtask.title,
+              completed: subtask.completed,
+              order_index: subtask.order_index
+            })
+            .eq('id', subtask.id)
+        } else {
+          // Create new
+          await supabase
+            .from('subtasks')
+            .insert([{
+              task_id: editingTask.id,
+              title: subtask.title,
+              completed: subtask.completed || false,
+              order_index: subtask.order_index || 0
+            }])
+        }
+      }
     } else {
-      await createTask({
+      const result = await createTask({
         title: taskData.title!,
         description: taskData.description || null,
         date: taskData.date!,
@@ -60,9 +193,24 @@ export default function Planner() {
         recurrence_parent_id: taskData.recurrence_parent_id || null,
         priority: taskData.priority,
       })
+      
+      // Create subtasks for new task
+      if (result.data && subtasks.length > 0) {
+        for (const subtask of subtasks) {
+          await supabase
+            .from('subtasks')
+            .insert([{
+              task_id: result.data.id,
+              title: subtask.title,
+              completed: subtask.completed || false,
+              order_index: subtask.order_index || 0
+            }])
+        }
+      }
     }
     setEditingTask(null)
     setDefaultDate('')
+    setTaskSubtasks([])
   }
 
   const handleSignOut = async () => {
@@ -146,10 +294,18 @@ export default function Planner() {
             <button
               onClick={() => setFocusMode(true)}
               className="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm flex items-center gap-1"
-              title="Focus Mode - Today's tasks with Pomodoro timer"
+              title="Focus Mode - Today's tasks with Pomodoro timer (Ctrl+F)"
             >
               <span className="material-symbols-outlined text-base">target</span>
               Focus
+            </button>
+
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              title="Keyboard shortcuts (?)"
+            >
+              <span className="material-symbols-outlined text-xl">keyboard</span>
             </button>
 
             <button
@@ -164,8 +320,9 @@ export default function Planner() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 max-w-md">
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Search tasks across all weeks..."
+              placeholder="Search tasks across all weeks... (Ctrl+K or /)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 
@@ -390,6 +547,7 @@ export default function Planner() {
         onSave={handleSaveTask}
         task={editingTask}
         defaultDate={defaultDate}
+        existingSubtasks={taskSubtasks}
       />
 
       {/* Focus Mode */}
@@ -401,6 +559,12 @@ export default function Planner() {
           onEdit={handleTaskEdit}
         />
       )}
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </div>
   )
 }

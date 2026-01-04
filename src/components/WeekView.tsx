@@ -62,7 +62,7 @@ export default function WeekView({
       .sort((a, b) => a.order_index - b.order_index)
   }
 
-  const handleDragStart = (event: { active: { id: string } }) => {
+  const handleDragStart = (event: DragEndEvent) => {
     const task = tasks.find((t) => t.id === event.active.id)
     setActiveTask(task || null)
   }
