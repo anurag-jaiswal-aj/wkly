@@ -9,6 +9,7 @@ import TaskCard from '@/components/TaskCard'
 import StatsPanel from '@/components/StatsPanel'
 import FocusMode from '@/components/FocusMode'
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import { motion } from 'framer-motion'
 import { isToday, parseISO, startOfWeek } from 'date-fns'
 import { supabase } from '@/lib/supabase'
@@ -31,6 +32,7 @@ export default function Planner() {
   const [focusMode, setFocusMode] = useState(false)
   const [taskSubtasks, setTaskSubtasks] = useState<Subtask[]>([])
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const handleTaskEdit = async (task: Task) => {
@@ -214,9 +216,11 @@ export default function Planner() {
   }
 
   const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out?')) {
-      await signOut()
-    }
+    setShowSignOutConfirm(true)
+  }
+
+  const confirmSignOut = async () => {
+    await signOut()
   }
 
   const applyFilters = (taskList: Task[]) => {
@@ -566,6 +570,17 @@ export default function Planner() {
       <KeyboardShortcutsModal
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
+      />
+
+      {/* Sign Out Confirmation */}
+      <ConfirmDialog
+        isOpen={showSignOutConfirm}
+        onClose={() => setShowSignOutConfirm(false)}
+        onConfirm={confirmSignOut}
+        title="Sign Out"
+        message="Are you sure you want to sign out? Any unsaved changes will be lost."
+        confirmText="Sign Out"
+        cancelText="Cancel"
       />
     </div>
   )
