@@ -43,7 +43,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showInfo = useCallback((message: string) => showToast(message, 'info'), [showToast])
   const showWarning = useCallback((message: string) => showToast(message, 'warning'), [showToast])
 
-  const getToastStyles = (type: ToastType) => {
+  const getToastStyles = () => {
     // All toasts use monochrome theme - black/white only
     return 'bg-black dark:bg-white text-white dark:text-black border border-gray-700 dark:border-gray-300'
   }
@@ -66,7 +66,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       
       {/* Toast Container */}
-      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 max-w-md">
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 max-w-md" role="region" aria-label="Notifications" aria-live="polite">
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
@@ -74,17 +74,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, y: 50, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.8 }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl ${getToastStyles(toast.type)}`}
+              role="alert"
+              aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-2xl ${getToastStyles()}`}
             >
-              <span className="material-symbols-outlined text-xl flex-shrink-0">
+              <span className="material-symbols-outlined text-xl flex-shrink-0" aria-hidden="true">
                 {getIcon(toast.type)}
               </span>
               <span className="text-sm font-medium flex-1">{toast.message}</span>
               <button
                 onClick={() => removeToast(toast.id)}
+                aria-label="Dismiss notification"
                 className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
               >
-                <span className="material-symbols-outlined text-lg">close</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">close</span>
               </button>
             </motion.div>
           ))}

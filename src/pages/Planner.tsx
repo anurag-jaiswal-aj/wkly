@@ -304,6 +304,11 @@ export default function Planner() {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* Skip link for keyboard navigation */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      
       <NetworkStatus />
       
       {/* Top Nav */}
@@ -322,42 +327,47 @@ export default function Planner() {
 
             <button
               onClick={toggleTheme}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              <span className="material-symbols-outlined text-xl">{isDark ? 'light_mode' : 'dark_mode'}</span>
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">{isDark ? 'light_mode' : 'dark_mode'}</span>
             </button>
 
             <button
               onClick={() => setStatsOpen(!statsOpen)}
+              aria-label="View weekly statistics"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Weekly stats (Ctrl+S)"
             >
-              <span className="material-symbols-outlined text-xl">bar_chart</span>
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">bar_chart</span>
             </button>
 
             <button
               onClick={() => setFocusMode(true)}
+              aria-label="Enter focus mode"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Focus Mode (Ctrl+F)"
             >
-              <span className="material-symbols-outlined text-xl">target</span>
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">target</span>
             </button>
 
             <button
               onClick={() => setShowShortcuts(true)}
+              aria-label="View keyboard shortcuts"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Keyboard shortcuts (?)"
             >
-              <span className="material-symbols-outlined text-xl">keyboard</span>
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">keyboard</span>
             </button>
 
             <button
               onClick={handleSignOut}
+              aria-label="Sign out"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Sign out"
             >
-              <span className="material-symbols-outlined text-xl">logout</span>
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">logout</span>
             </button>
           </div>
         </div>
@@ -370,6 +380,7 @@ export default function Planner() {
               placeholder="Search tasks... (Ctrl+K or /)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search tasks"
               className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 
                          rounded-lg bg-white dark:bg-gray-900 
                          focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600
@@ -386,6 +397,7 @@ export default function Planner() {
                 setShowCompleted(true)
                 setSearchQuery('')
               }}
+              aria-label="Clear all filters"
               className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 
                        hover:bg-gray-100 dark:hover:bg-gray-900 rounded transition-colors"
               title="Clear all filters"
@@ -400,6 +412,8 @@ export default function Planner() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setFilterPriority(filterPriority === 'high' ? 'all' : 'high')}
+              aria-label={filterPriority === 'high' ? 'Show all priorities' : 'Show only high priority tasks'}
+              aria-pressed={filterPriority === 'high'}
               className={`px-3 py-1.5 text-xs rounded transition-all flex items-center gap-1 ${
                 filterPriority === 'high'
                   ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
@@ -410,6 +424,8 @@ export default function Planner() {
             </button>
             <button
               onClick={() => setShowTodayOnly(!showTodayOnly)}
+              aria-label={showTodayOnly ? 'Show all days' : 'Show only today'}
+              aria-pressed={showTodayOnly}
               className={`px-3 py-1.5 text-xs rounded transition-all ${
                 showTodayOnly
                   ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
@@ -420,6 +436,8 @@ export default function Planner() {
             </button>
             <button
               onClick={() => setShowCompleted(!showCompleted)}
+              aria-label={showCompleted ? 'Hide completed tasks' : 'Show completed tasks'}
+              aria-pressed={!showCompleted}
               className={`px-3 py-1.5 text-xs rounded transition-all ${
                 !showCompleted
                   ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
@@ -445,7 +463,7 @@ export default function Planner() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
+      <main id="main-content" className="flex-1 overflow-hidden" role="main" aria-label="Task planner">
         {searchQuery ? (
           <div className="h-full overflow-y-auto p-6">
             <div className="max-w-4xl mx-auto">

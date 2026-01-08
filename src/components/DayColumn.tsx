@@ -33,6 +33,8 @@ export default function DayColumn({
   return (
     <div
       ref={setNodeRef}
+      role="region"
+      aria-label={`Tasks for ${format(date, 'EEEE, MMMM d, yyyy')}`}
       className={`
         flex-1 min-w-0 border-r border-gray-200 dark:border-gray-800 last:border-r-0
         ${today ? 'bg-gray-50 dark:bg-gray-900' : ''}
@@ -79,6 +81,7 @@ export default function DayColumn({
 
         <button
           onClick={() => onAddTask(dateStr)}
+          aria-label={`Add task for ${format(date, 'EEEE, MMMM d')}`}
           className="w-full py-2.5 text-sm text-gray-400 hover:text-black dark:hover:text-white 
                      border border-dashed border-gray-300 dark:border-gray-700
                      hover:border-gray-500 dark:hover:border-gray-500

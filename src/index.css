@@ -35,6 +35,22 @@
   input, textarea, select {
     @apply bg-white dark:bg-gray-900 text-black dark:text-white;
   }
+
+  /* Enhanced focus indicators for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-black dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-black;
+  }
+
+  /* Skip link for keyboard navigation */
+  .skip-link {
+    @apply fixed top-0 left-0 z-[100] px-4 py-2 bg-black dark:bg-white text-white dark:text-black;
+    transform: translateY(-100%);
+    transition: transform 0.2s;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
 }
 
 @layer components {

@@ -87,6 +87,9 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
             e.stopPropagation()
             onToggle(task.id, !task.completed)
           }}
+          aria-label={task.completed ? `Mark "${task.title}" as incomplete` : `Mark "${task.title}" as complete`}
+          aria-checked={task.completed}
+          role="checkbox"
           className="mt-1 flex-shrink-0 w-5 h-5 rounded border-2 border-gray-400 dark:border-gray-600 
                      hover:border-black dark:hover:border-white hover:scale-110 transition-all duration-150
                      flex items-center justify-center"

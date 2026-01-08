@@ -154,17 +154,20 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                 <button
                   type="button"
                   onClick={() => setShowTemplates(!showTemplates)}
+                  aria-label="Choose from task templates"
+                  aria-expanded={showTemplates}
                   className="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                   title="Use template"
                 >
-                  <span className="material-symbols-outlined text-xl">auto_awesome</span>
+                  <span className="material-symbols-outlined text-xl" aria-hidden="true">auto_awesome</span>
                 </button>
               )}
               <button
                 onClick={handleClose}
+                aria-label="Close dialog"
                 className="text-gray-400 hover:text-black dark:hover:text-white"
               >
-                <span className="material-symbols-outlined text-xl">close</span>
+                <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
               </button>
             </div>
           </div>
@@ -199,7 +202,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-label={task ? 'Edit task form' : 'Create task form'}>
             <div>
               <label htmlFor="title" className="block text-sm font-medium mb-2">
                 Title
