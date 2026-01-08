@@ -418,16 +418,13 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
           </>
         )}
 
-        {/* Tour modal - positioned based on highlight */}
-        <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        {/* Tour modal - fixed position at center */}
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[10000] pointer-events-none">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl max-w-md w-full p-8 pointer-events-auto"
-            style={{
-              marginTop: highlightRect && highlightRect.bottom > window.innerHeight / 2 ? '-300px' : '0'
-            }}
           >
             {/* Icon */}
             <div className="flex justify-center mb-6">
