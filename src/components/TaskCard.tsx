@@ -3,9 +3,11 @@ import { motion } from 'framer-motion'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { format, parseISO } from 'date-fns'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo, lazy, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
-import ConfirmDialog from './ConfirmDialog'
+
+const ConfirmDialog = lazy(() => import('./ConfirmDialog'))
+const TaskHistoryModal = lazy(() => import('./TaskHistoryModal'))
 
 interface TaskCardProps {
   task: Task
@@ -15,9 +17,11 @@ interface TaskCardProps {
   showDate?: boolean
 }
 
-export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }: TaskCardProps) {
+// Memoize TaskCard to prevent unnecessary re-renders
+const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, showDate }: TaskCardProps) {
   const [subtasks, setSubtasks] = useState<Subtask[]>([])
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   
   useEffect(() => {
     const fetchSubtasks = async () => {
@@ -153,27 +157,54 @@ export default function TaskCard({ task, onEdit, onToggle, onDelete, showDate }:
           )}
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setShowDeleteConfirm(true)
-          }}
-          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900
-                     dark:hover:text-gray-100 transition-all flex-shrink-0"
-        >
-          <span className="material-symbols-outlined text-xl">close</span>
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowHistory(true)
+            }}
+            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600
+                       dark:hover:text-gray-300 transition-all"
+            title="View history"
+          >
+            <span className="material-symbols-outlined text-xl">history</span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowDeleteConfirm(true)
+            }}
+            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900
+                       dark:hover:text-gray-100 transition-all"
+          >
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
       </div>
 
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => onDelete(task.id)}
-        title="Delete Task"
-        message="Are you sure you want to delete this task? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-      />
+      <Suspense fallback={null}>
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={() => onDelete(task.id)}
+          title="Delete Task"
+          message="Are you sure you want to delete this task? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <TaskHistoryModal
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+          taskId={task.id}
+          taskTitle={task.title}
+        />
+      </Suspense>
     </motion.div>
   )
-}
+})
+
+export default TaskCard

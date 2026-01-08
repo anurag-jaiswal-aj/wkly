@@ -1,29 +1,42 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTasks } from '@/hooks/useTasks'
 import { useTheme } from '@/hooks/useTheme'
 import { useToast } from '@/contexts/ToastContext'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useOfflineQueue } from '@/hooks/useOfflineQueue'
 import { Task, Subtask } from '@/types'
 import WeekView from '@/components/WeekView'
-import TaskModal from '@/components/TaskModal'
 import TaskCard from '@/components/TaskCard'
-import StatsPanel from '@/components/StatsPanel'
-import FocusMode from '@/components/FocusMode'
-import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal'
-import ConfirmDialog from '@/components/ConfirmDialog'
 import NetworkStatus from '@/components/NetworkStatus'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import OnboardingTour from '@/components/OnboardingTour'
 import { motion } from 'framer-motion'
 import { isToday, parseISO, startOfWeek } from 'date-fns'
 import { supabase } from '@/lib/supabase'
+
+// Lazy load heavy components
+const TaskModal = lazy(() => import('@/components/TaskModal'))
+const StatsPanel = lazy(() => import('@/components/StatsPanel'))
+const FocusMode = lazy(() => import('@/components/FocusMode'))
+const KeyboardShortcutsModal = lazy(() => import('@/components/KeyboardShortcutsModal'))
+const ConfirmDialog = lazy(() => import('@/components/ConfirmDialog'))
 
 export default function Planner() {
   const { user, signOut } = useAuth()
   const toast = useToast()
   const [weekStart, setWeekStart] = useState(new Date())
   const [searchQuery, setSearchQuery] = useState('')
+  
+  // Debounce search query for better performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+  
+  // Offline queue management
+  const { isOnline, queueCount, isSyncing } = useOfflineQueue()
+  
   const { tasks, loading, createTask, updateTask, deleteTask, toggleTaskComplete, reorderTasks } = useTasks(
     weekStart, 
-    searchQuery,
+    debouncedSearchQuery,
     (error) => toast.showError(error)
   )
   const { isDark, toggleTheme } = useTheme()
@@ -40,11 +53,21 @@ export default function Planner() {
   const [taskSubtasks, setTaskSubtasks] = useState<Subtask[]>([])
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const handleTaskEdit = async (task: Task) => {
+  // Check if user needs onboarding
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding')
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true)
+    }
+  }, [])
+
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleTaskEdit = useCallback(async (task: Task) => {
     // If searching, jump to the week containing this task
-    if (searchQuery) {
+    if (debouncedSearchQuery) {
       const taskDate = new Date(task.date)
       setWeekStart(taskDate)
       setSearchQuery('') // Clear search after jumping
@@ -60,18 +83,18 @@ export default function Planner() {
     setTaskSubtasks(data || [])
     setEditingTask(task)
     setIsModalOpen(true)
-  }
+  }, [debouncedSearchQuery])
 
-  const handleAddTask = (date: string) => {
+  const handleAddTask = useCallback((date: string) => {
     setEditingTask(null)
     setDefaultDate(date)
     setTaskSubtasks([])
     setIsModalOpen(true)
-  }
+  }, [])
 
-  const goToToday = () => {
+  const goToToday = useCallback(() => {
     setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))
-  }
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -245,14 +268,15 @@ export default function Planner() {
     setShowSignOutConfirm(true)
   }
 
-  const confirmSignOut = async () => {
+  const confirmSignOut = useCallback(async () => {
     const { error } = await signOut()
     if (error) {
       toast.showError('Failed to sign out. Please try again.')
     }
-  }
+  }, [signOut, toast])
 
-  const applyFilters = (taskList: Task[]) => {
+  // Memoize filter function to avoid recreating on every render
+  const applyFilters = useCallback((taskList: Task[]) => {
     let filtered = taskList
 
     // Filter by completion status
@@ -276,30 +300,30 @@ export default function Planner() {
     }
 
     return filtered
-  }
+  }, [showCompleted, filterStatus, filterPriority, showTodayOnly])
 
-  const filteredTasks = applyFilters(
-    searchQuery
+  // Memoize filtered tasks to avoid recomputing on every render
+  const filteredTasks = useMemo(() => {
+    const searchFiltered = searchQuery
       ? tasks.filter(task =>
           task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           task.description?.toLowerCase().includes(searchQuery.toLowerCase())
         )
       : tasks
-  )
+    
+    return applyFilters(searchFiltered)
+  }, [tasks, searchQuery, applyFilters])
 
-  const weekStats = {
+  // Memoize week stats to avoid recalculating on every render
+  const weekStats = useMemo(() => ({
     total: filteredTasks.length,
     completed: filteredTasks.filter(t => t.completed).length,
     pending: filteredTasks.filter(t => !t.completed).length,
     highPriority: filteredTasks.filter(t => t.priority === 'high').length,
-  }
+  }), [filteredTasks])
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    )
+    return <LoadingSpinner fullScreen />
   }
 
   return (
@@ -455,12 +479,14 @@ export default function Planner() {
       </motion.header>
 
       {/* Stats Panel */}
-      <StatsPanel 
-        tasks={tasks}
-        weekStart={weekStart}
-        isOpen={statsOpen}
-        onToggle={() => setStatsOpen(!statsOpen)}
-      />
+      <Suspense fallback={null}>
+        <StatsPanel 
+          tasks={tasks}
+          weekStart={weekStart}
+          isOpen={statsOpen}
+          onToggle={() => setStatsOpen(!statsOpen)}
+        />
+      </Suspense>
 
       {/* Main Content */}
       <main id="main-content" className="flex-1 overflow-hidden" role="main" aria-label="Task planner">
@@ -508,45 +534,79 @@ export default function Planner() {
       </main>
 
       {/* Task Modal */}
-      <TaskModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setEditingTask(null)
-          setDefaultDate('')
-        }}
-        onSave={handleSaveTask}
-        task={editingTask}
-        defaultDate={defaultDate}
-        existingSubtasks={taskSubtasks}
-      />
+      <Suspense fallback={null}>
+        <TaskModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+            setEditingTask(null)
+            setDefaultDate('')
+          }}
+          onSave={handleSaveTask}
+          task={editingTask}
+          defaultDate={defaultDate}
+          existingSubtasks={taskSubtasks}
+        />
+      </Suspense>
 
       {/* Focus Mode */}
       {focusMode && (
-        <FocusMode
-          tasks={tasks}
-          onClose={() => setFocusMode(false)}
-          onToggle={(taskId) => toggleTaskComplete(taskId, tasks.find(t => t.id === taskId)?.completed || false)}
-          onEdit={handleTaskEdit}
-        />
+        <Suspense fallback={null}>
+          <FocusMode
+            tasks={tasks}
+            onClose={() => setFocusMode(false)}
+            onToggle={(taskId) => toggleTaskComplete(taskId, tasks.find(t => t.id === taskId)?.completed || false)}
+            onEdit={handleTaskEdit}
+          />
+        </Suspense>
       )}
 
       {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal
-        isOpen={showShortcuts}
-        onClose={() => setShowShortcuts(false)}
-      />
+      <Suspense fallback={null}>
+        <KeyboardShortcutsModal
+          isOpen={showShortcuts}
+          onClose={() => setShowShortcuts(false)}
+        />
+      </Suspense>
 
       {/* Sign Out Confirmation */}
-      <ConfirmDialog
-        isOpen={showSignOutConfirm}
-        onClose={() => setShowSignOutConfirm(false)}
-        onConfirm={confirmSignOut}
-        title="Sign Out"
-        message="Are you sure you want to sign out? Any unsaved changes will be lost."
-        confirmText="Sign Out"
-        cancelText="Cancel"
-      />
+      <Suspense fallback={null}>
+        <ConfirmDialog
+          isOpen={showSignOutConfirm}
+          onClose={() => setShowSignOutConfirm(false)}
+          onConfirm={confirmSignOut}
+          title="Sign Out"
+          message="Are you sure you want to sign out?"
+          confirmText="Sign Out"
+          cancelText="Cancel"
+        />
+      </Suspense>
+
+      {/* Onboarding Tour */}
+      {showOnboarding && (
+        <OnboardingTour
+          onComplete={() => {
+            setShowOnboarding(false)
+            localStorage.setItem('hasSeenOnboarding', 'true')
+          }}
+        />
+      )}
+
+      {/* Offline Status Banner */}
+      {!isOnline && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
+          <span className="material-symbols-outlined text-lg">cloud_off</span>
+          <span className="text-sm">You're offline. Changes will sync when reconnected.</span>
+          {queueCount > 0 && (
+            <span className="ml-2 bg-white text-black px-2 py-0.5 rounded-full text-xs font-medium">
+              {queueCount} pending
+            </span>
+          )}
+          {isSyncing && (
+            <span className="ml-2 text-xs animate-pulse">Syncing...</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
