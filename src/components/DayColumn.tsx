@@ -76,10 +76,6 @@ const DayColumn = memo(function DayColumn({
             icon="event_available"
             title={today ? "Start your day" : "No tasks"}
             description={today ? "Add tasks to organize your day" : "Plan ahead by adding tasks"}
-            action={{
-              label: "+ Add task",
-              onClick: () => onAddTask(dateStr)
-            }}
           />
         )}
 
