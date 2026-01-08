@@ -15,19 +15,19 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-16 px-4 text-center"
+      className="flex flex-col items-center justify-center py-6 px-4 text-center"
     >
-      <div className="mb-6 text-gray-300 dark:text-gray-700">
-        <span className="material-symbols-outlined" style={{ fontSize: '96px' }} aria-hidden="true">
+      <div className="mb-3 text-gray-300 dark:text-gray-700">
+        <span className="material-symbols-outlined" style={{ fontSize: '64px' }} aria-hidden="true">
           {icon}
         </span>
       </div>
       
-      <h3 className="text-xl font-light mb-2 text-gray-900 dark:text-gray-100">
+      <h3 className="text-lg font-light mb-1 text-gray-900 dark:text-gray-100">
         {title}
       </h3>
       
-      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6">
+      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-0">
         {description}
       </p>
       
