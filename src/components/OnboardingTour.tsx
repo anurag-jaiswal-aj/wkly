@@ -154,19 +154,83 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
     if (!isOpen) return
 
     const step = steps[currentStep]
-    if (step.target) {
-      // Wait for element to be rendered, retry up to 10 times
-      let attempts = 0
-      const maxAttempts = 10
-      let targetElement: Element | null = null
+    let targetElement: Element | null = null
+    let attempts = 0
+    const maxAttempts = 15
+    
+    const findElement = () => {
+      if (!step.target) return
       
-      const findElement = () => {
-        // For elements with multiple matches, find the first visible one
-        const elements = document.querySelectorAll(step.target!)
+      // For elements with multiple matches, find the first visible one
+      const elements = document.querySelectorAll(step.target)
+      let element: Element | null = null
+      
+      if (elements.length > 1) {
+        // Find first visible element (width and height > 0)
+        for (let i = 0; i < elements.length; i++) {
+          const rect = elements[i].getBoundingClientRect()
+          // Check if element is in viewport and has dimensions
+          if (rect.width > 0 && rect.height > 0) {
+            element = elements[i]
+            break
+          }
+        }
+      } else {
+        element = elements[0] || null
+      }
+      
+      if (element) {
+        targetElement = element
+        
+        // Scroll element into view FIRST, then get rect
+        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+        
+        // Store reference for timeout
+        const el = element;
+        
+        // Wait for scroll
+        setTimeout(function() {
+          const domRect = el.getBoundingClientRect();
+          setHighlightRect(domRect);
+          (el as HTMLElement).style.position = 'relative';
+          (el as HTMLElement).style.zIndex = '10000';
+        }, 300);
+      } else if (attempts < maxAttempts) {
+        attempts++
+        setTimeout(findElement, 200)
+      } else {
+        console.warn(`Could not find element with selector: ${step.target}`)
+        setHighlightRect(null)
+      }
+    }
+    
+    if (step.target) {
+      // Initial delay to let DOM settle
+      setTimeout(findElement, 100)
+    } else {
+      setHighlightRect(null)
+    }
+    
+    // Cleanup function
+    return () => {
+      if (targetElement) {
+        (targetElement as HTMLElement).style.zIndex = '';
+        (targetElement as HTMLElement).style.position = ''
+      }
+    }
+  }, [currentStep, isOpen])
+
+  // Update highlight on window resize or scroll
+  useEffect(() => {
+    if (!isOpen || !highlightRect) return
+
+    const updateHighlight = () => {
+      const step = steps[currentStep]
+      if (step.target) {
+        const elements = document.querySelectorAll(step.target)
         let element: Element | null = null
         
         if (elements.length > 1) {
-          // Find first visible element
           for (let i = 0; i < elements.length; i++) {
             const rect = elements[i].getBoundingClientRect()
             if (rect.width > 0 && rect.height > 0) {
@@ -179,67 +243,19 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
         }
         
         if (element) {
-          targetElement = element
-          const rect = element.getBoundingClientRect()
-          setHighlightRect(rect)
-          
-          // Temporarily boost z-index
-          const originalZIndex = (element as HTMLElement).style.zIndex
-          const originalPosition = (element as HTMLElement).style.position;
-          (element as HTMLElement).style.position = 'relative';
-          (element as HTMLElement).style.zIndex = '10000'
-          
-          // Scroll element into view if needed with a small delay
-          setTimeout(() => {
-            element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
-          }, 100)
-          
-          // Restore original z-index when moving to next step
-          return () => {
-            if (targetElement) {
-              (targetElement as HTMLElement).style.zIndex = originalZIndex;
-              (targetElement as HTMLElement).style.position = originalPosition
-            }
-          }
-        } else if (attempts < maxAttempts) {
-          attempts++
-          setTimeout(findElement, 150)
-        } else {
-          setHighlightRect(null)
-        }
-      }
-      
-      // Small initial delay to let DOM settle
-      const timer = setTimeout(findElement, 50)
-      return () => {
-        clearTimeout(timer)
-        if (targetElement) {
-          (targetElement as HTMLElement).style.zIndex = '';
-          (targetElement as HTMLElement).style.position = ''
-        }
-      }
-    } else {
-      setHighlightRect(null)
-    }
-  }, [currentStep, isOpen])
-
-  // Update highlight on window resize
-  useEffect(() => {
-    if (!isOpen || !highlightRect) return
-
-    const handleResize = () => {
-      const step = steps[currentStep]
-      if (step.target) {
-        const element = document.querySelector(step.target)
-        if (element) {
           const rect = element.getBoundingClientRect()
           setHighlightRect(rect)
         }
       }
     }
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    window.addEventListener('resize', updateHighlight)
+    window.addEventListener('scroll', updateHighlight, true) // Use capture phase for all scrolls
+    
+    return () => {
+      window.removeEventListener('resize', updateHighlight)
+      window.removeEventListener('scroll', updateHighlight, true)
+    }
   }, [currentStep, isOpen, highlightRect])
 
   const handleNext = () => {
