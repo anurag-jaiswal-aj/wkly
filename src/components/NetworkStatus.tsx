@@ -32,7 +32,7 @@ export default function NetworkStatus() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-black dark:bg-white text-white dark:text-black border border-gray-700 dark:border-gray-300 shadow-lg flex items-center gap-2"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-black dark:bg-white text-white dark:text-black border border-white dark:border-black shadow-lg flex items-center gap-2"
         >
           <span className="material-symbols-outlined text-lg">
             wifi_off

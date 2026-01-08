@@ -44,16 +44,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showWarning = useCallback((message: string) => showToast(message, 'warning'), [showToast])
 
   const getToastStyles = (type: ToastType) => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-600 dark:bg-green-700 text-white'
-      case 'error':
-        return 'bg-red-600 dark:bg-red-700 text-white'
-      case 'warning':
-        return 'bg-yellow-600 dark:bg-yellow-700 text-white'
-      default:
-        return 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-    }
+    // All toasts use monochrome theme - black/white only
+    return 'bg-black dark:bg-white text-white dark:text-black border border-gray-700 dark:border-gray-300'
   }
 
   const getIcon = (type: ToastType) => {
