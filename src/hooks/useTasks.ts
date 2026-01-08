@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { Task } from '@/types'
 import { startOfWeek, endOfWeek, format } from 'date-fns'
 
-export function useTasks(weekStart: Date, searchQuery?: string) {
+export function useTasks(weekStart: Date, searchQuery?: string, onError?: (message: string) => void) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -29,10 +29,11 @@ export function useTasks(weekStart: Date, searchQuery?: string) {
       setTasks(data || [])
     } catch (error) {
       console.error('Error fetching tasks:', error)
+      onError?.('Failed to load tasks. Please refresh the page.')
     } finally {
       setLoading(false)
     }
-  }, [startDate, endDate, searchQuery])
+  }, [startDate, endDate, searchQuery, onError])
 
   useEffect(() => {
     fetchTasks()

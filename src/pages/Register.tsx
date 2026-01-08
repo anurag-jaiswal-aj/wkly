@@ -1,28 +1,28 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useToast } from '@/contexts/ToastContext'
 import { motion } from 'framer-motion'
 
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signUp } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      toast.showError('Passwords do not match')
       return
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+      toast.showError('Password must be at least 6 characters')
       return
     }
 
@@ -31,9 +31,10 @@ export default function Register() {
     const { error } = await signUp(email, password)
 
     if (error) {
-      setError(error.message)
+      toast.showError(error.message)
       setLoading(false)
     } else {
+      toast.showSuccess('Account created successfully!')
       navigate('/planner')
     }
   }
@@ -52,12 +53,6 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-sm">
-              {error}
-            </div>
-          )}
-
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
               Email

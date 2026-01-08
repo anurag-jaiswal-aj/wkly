@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTasks } from '@/hooks/useTasks'
 import { useTheme } from '@/hooks/useTheme'
+import { useToast } from '@/contexts/ToastContext'
 import { Task, Subtask } from '@/types'
 import WeekView from '@/components/WeekView'
 import TaskModal from '@/components/TaskModal'
@@ -10,15 +11,21 @@ import StatsPanel from '@/components/StatsPanel'
 import FocusMode from '@/components/FocusMode'
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import NetworkStatus from '@/components/NetworkStatus'
 import { motion } from 'framer-motion'
 import { isToday, parseISO, startOfWeek } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 
 export default function Planner() {
   const { user, signOut } = useAuth()
+  const toast = useToast()
   const [weekStart, setWeekStart] = useState(new Date())
   const [searchQuery, setSearchQuery] = useState('')
-  const { tasks, loading, createTask, updateTask, deleteTask, toggleTaskComplete, reorderTasks } = useTasks(weekStart, searchQuery)
+  const { tasks, loading, createTask, updateTask, deleteTask, toggleTaskComplete, reorderTasks } = useTasks(
+    weekStart, 
+    searchQuery,
+    (error) => toast.showError(error)
+  )
   const { isDark, toggleTheme } = useTheme()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -146,73 +153,92 @@ export default function Planner() {
   }, [focusMode, isModalOpen, showShortcuts, statsOpen, weekStart, toggleTheme])
 
   const handleSaveTask = async (taskData: Partial<Task>, subtasks: Partial<Subtask>[] = []) => {
-    if (editingTask) {
-      await updateTask(editingTask.id, taskData)
-      
-      // Handle subtasks
-      // Delete removed subtasks
-      const existingIds = taskSubtasks.map(st => st.id)
-      const newIds = subtasks.filter(st => st.id).map(st => st.id)
-      const toDelete = existingIds.filter(id => !newIds.includes(id))
-      
-      for (const id of toDelete) {
-        await supabase.from('subtasks').delete().eq('id', id)
-      }
-      
-      // Update or create subtasks
-      for (const subtask of subtasks) {
-        if (subtask.id) {
-          // Update existing
-          await supabase
-            .from('subtasks')
-            .update({
-              title: subtask.title,
-              completed: subtask.completed,
-              order_index: subtask.order_index
-            })
-            .eq('id', subtask.id)
-        } else {
-          // Create new
-          await supabase
-            .from('subtasks')
-            .insert([{
-              task_id: editingTask.id,
-              title: subtask.title,
-              completed: subtask.completed || false,
-              order_index: subtask.order_index || 0
-            }])
+    try {
+      if (editingTask) {
+        const result = await updateTask(editingTask.id, taskData)
+        
+        if (result.error) {
+          toast.showError('Failed to update task')
+          return
         }
-      }
-    } else {
-      const result = await createTask({
-        title: taskData.title!,
-        description: taskData.description || null,
-        date: taskData.date!,
-        completed: false,
-        order_index: 0,
-        reminder_time: null,
-        recurrence: taskData.recurrence || null,
-        recurrence_parent_id: taskData.recurrence_parent_id || null,
-        priority: taskData.priority,
-      })
-      
-      // Create subtasks for new task
-      if (result.data && subtasks.length > 0) {
+        
+        // Handle subtasks
+        // Delete removed subtasks
+        const existingIds = taskSubtasks.map(st => st.id)
+        const newIds = subtasks.filter(st => st.id).map(st => st.id)
+        const toDelete = existingIds.filter(id => !newIds.includes(id))
+        
+        for (const id of toDelete) {
+          await supabase.from('subtasks').delete().eq('id', id)
+        }
+        
+        // Update or create subtasks
         for (const subtask of subtasks) {
-          await supabase
-            .from('subtasks')
-            .insert([{
-              task_id: result.data.id,
-              title: subtask.title,
-              completed: subtask.completed || false,
-              order_index: subtask.order_index || 0
-            }])
+          if (subtask.id) {
+            // Update existing
+            await supabase
+              .from('subtasks')
+              .update({
+                title: subtask.title,
+                completed: subtask.completed,
+                order_index: subtask.order_index
+              })
+              .eq('id', subtask.id)
+          } else {
+            // Create new
+            await supabase
+              .from('subtasks')
+              .insert([{
+                task_id: editingTask.id,
+                title: subtask.title,
+                completed: subtask.completed || false,
+                order_index: subtask.order_index || 0
+              }])
+          }
         }
+        
+        toast.showSuccess('Task updated successfully')
+      } else {
+        const result = await createTask({
+          title: taskData.title!,
+          description: taskData.description || null,
+          date: taskData.date!,
+          completed: false,
+          order_index: 0,
+          reminder_time: null,
+          recurrence: taskData.recurrence || null,
+          recurrence_parent_id: taskData.recurrence_parent_id || null,
+          priority: taskData.priority,
+        })
+        
+        if (result.error) {
+          toast.showError('Failed to create task')
+          return
+        }
+        
+        // Create subtasks for new task
+        if (result.data && subtasks.length > 0) {
+          for (const subtask of subtasks) {
+            await supabase
+              .from('subtasks')
+              .insert([{
+                task_id: result.data.id,
+                title: subtask.title,
+                completed: subtask.completed || false,
+                order_index: subtask.order_index || 0
+              }])
+          }
+        }
+        
+        toast.showSuccess('Task created successfully')
       }
+      setEditingTask(null)
+      setDefaultDate('')
+      setTaskSubtasks([])
+    } catch (error) {
+      console.error('Error saving task:', error)
+      toast.showError('An unexpected error occurred')
     }
-    setEditingTask(null)
-    setDefaultDate('')
-    setTaskSubtasks([])
   }
 
   const handleSignOut = async () => {
@@ -220,7 +246,10 @@ export default function Planner() {
   }
 
   const confirmSignOut = async () => {
-    await signOut()
+    const { error } = await signOut()
+    if (error) {
+      toast.showError('Failed to sign out. Please try again.')
+    }
   }
 
   const applyFilters = (taskList: Task[]) => {
@@ -275,6 +304,8 @@ export default function Planner() {
 
   return (
     <div className="h-screen flex flex-col">
+      <NetworkStatus />
+      
       {/* Top Nav */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}

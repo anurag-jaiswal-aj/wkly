@@ -6,7 +6,7 @@ import { DEFAULT_TEMPLATES, TaskTemplate } from '@/data/templates'
 interface TaskModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (task: Partial<Task>, subtasks?: Partial<Subtask>[]) => void
+  onSave: (task: Partial<Task>, subtasks?: Partial<Subtask>[]) => Promise<void>
   task?: Task | null
   defaultDate?: string
   existingSubtasks?: Subtask[]
@@ -21,6 +21,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
   const [subtasks, setSubtasks] = useState<Partial<Subtask>[]>([])
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
   const [showTemplates, setShowTemplates] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (task) {
@@ -48,26 +49,32 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
     setNewSubtaskTitle('')
   }, [task, defaultDate, isOpen, existingSubtasks])
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
 
-    onSave({
-      ...(task && { id: task.id }),
-      title: title.trim(),
-      description: description.trim() || null,
-      date,
-      completed: task?.completed || false,
-      order_index: task?.order_index || 0,
-      priority: priority,
-      recurrence: recurrence === 'none' ? null : recurrence,
-      recurrence_parent_id: task?.recurrence_parent_id || null,
-    }, subtasks)
+    setSaving(true)
+    try {
+      await onSave({
+        ...(task && { id: task.id }),
+        title: title.trim(),
+        description: description.trim() || null,
+        date,
+        completed: task?.completed || false,
+        order_index: task?.order_index || 0,
+        priority: priority,
+        recurrence: recurrence === 'none' ? null : recurrence,
+        recurrence_parent_id: task?.recurrence_parent_id || null,
+      }, subtasks)
 
-    onClose()
+      handleClose()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleClose = () => {
+    if (saving) return // Prevent closing while saving
     setTitle('')
     setDescription('')
     setSubtasks([])
@@ -374,14 +381,16 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                 type="button"
                 onClick={handleClose}
                 className="btn-secondary flex-1"
+                disabled={saving}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="btn-primary flex-1"
+                disabled={saving}
               >
-                {task ? 'Save' : 'Create'}
+                {saving ? 'Saving...' : (task ? 'Save' : 'Create')}
               </button>
             </div>
           </form>
