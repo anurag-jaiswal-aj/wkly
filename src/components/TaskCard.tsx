@@ -80,7 +80,7 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
       className={`
         group p-4 mb-2 card cursor-grab active:cursor-grabbing
         hover:shadow-lg hover:border-gray-400 dark:hover:border-gray-500
-        hover:-translate-y-0.5 transition-all duration-200
+        hover:-translate-y-0.5 transition-all duration-150
         ${task.completed ? 'opacity-60' : ''}
         ${isDragging ? 'shadow-2xl z-50 scale-105' : ''}
         ${getPriorityColor()}

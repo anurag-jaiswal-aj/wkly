@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { memo } from 'react'
 
 interface EmptyStateProps {
   icon: string
@@ -10,11 +11,12 @@ interface EmptyStateProps {
   }
 }
 
-export default function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+const EmptyState = memo(function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
       className="flex flex-col items-center justify-center py-6 px-4 text-center"
     >
       <div className="mb-3 text-gray-300 dark:text-gray-700">
@@ -41,4 +43,6 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
       )}
     </motion.div>
   )
-}
+})
+
+export default EmptyState

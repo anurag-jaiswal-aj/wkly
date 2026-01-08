@@ -156,7 +156,7 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
     const step = steps[currentStep]
     let targetElement: Element | null = null
     let attempts = 0
-    const maxAttempts = 15
+    const maxAttempts = 8
     
     const findElement = () => {
       if (!step.target) return
@@ -194,19 +194,18 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
           setHighlightRect(domRect);
           (el as HTMLElement).style.position = 'relative';
           (el as HTMLElement).style.zIndex = '10000';
-        }, 300);
+        }, 150);
       } else if (attempts < maxAttempts) {
         attempts++
-        setTimeout(findElement, 200)
+        setTimeout(findElement, 150)
       } else {
-        console.warn(`Could not find element with selector: ${step.target}`)
         setHighlightRect(null)
       }
     }
     
     if (step.target) {
       // Initial delay to let DOM settle
-      setTimeout(findElement, 100)
+      setTimeout(findElement, 50)
     } else {
       setHighlightRect(null)
     }
@@ -289,8 +288,8 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { duration: 0.2 } }}
+        exit={{ opacity: 0, transition: { duration: 0.15 } }}
         className="fixed inset-0 z-[9999]"
       >
         {/* Dark overlay with spotlight cutout */}
@@ -336,8 +335,8 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
             {/* Outer glow */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ opacity: [0.2, 0.4, 0.2] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               className="absolute rounded-xl pointer-events-none"
               style={{
                 left: highlightRect.x - 20,
@@ -351,12 +350,12 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
             
             {/* Main border with pulse animation */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ 
                 opacity: 1, 
                 scale: 1,
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
               className="absolute border-4 border-white rounded-xl pointer-events-none shadow-2xl"
               style={{
                 left: highlightRect.x - 12,
@@ -378,7 +377,7 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
                 key={i}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 + i * 0.05, duration: 0.3 }}
+                transition={{ delay: 0.05 + i * 0.03, duration: 0.2 }}
                 className="absolute w-8 h-8 pointer-events-none"
                 style={{
                   ...pos,
@@ -403,10 +402,10 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
             {/* Pulse rings */}
             <motion.div
               animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.6, 0.2, 0.6],
+                scale: [1, 1.03, 1],
+                opacity: [0.5, 0.2, 0.5],
               }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               className="absolute border-2 border-white/40 rounded-xl pointer-events-none"
               style={{
                 left: highlightRect.x - 16,
@@ -421,9 +420,9 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
         {/* Tour modal - fixed position at center */}
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[10000] pointer-events-none">
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1, transition: { duration: 0.2 } }}
+            exit={{ scale: 0.95, opacity: 0, transition: { duration: 0.15 } }}
             className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl max-w-md w-full p-8 pointer-events-auto relative"
           >
             {/* Close button at top right */}

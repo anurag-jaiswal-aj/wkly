@@ -29,7 +29,7 @@ export default function Planner() {
   const [searchQuery, setSearchQuery] = useState('')
   
   // Debounce search query for better performance
-  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+  const debouncedSearchQuery = useDebounce(searchQuery, 200)
   
   // Offline queue management
   const { isOnline, queueCount, isSyncing } = useOfflineQueue()
@@ -173,7 +173,7 @@ export default function Planner() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [focusMode, isModalOpen, showShortcuts, statsOpen, weekStart, toggleTheme])
+  }, [focusMode, isModalOpen, showShortcuts, statsOpen, weekStart, toggleTheme, handleAddTask, goToToday])
 
   const handleSaveTask = async (taskData: Partial<Task>, subtasks: Partial<Subtask>[] = []) => {
     try {
