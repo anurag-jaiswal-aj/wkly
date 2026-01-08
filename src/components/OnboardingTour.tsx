@@ -424,8 +424,17 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl max-w-md w-full p-8 pointer-events-auto"
+            className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl max-w-md w-full p-8 pointer-events-auto relative"
           >
+            {/* Close button at top right */}
+            <button
+              onClick={handleSkip}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Close tour"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+
             {/* Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
@@ -467,14 +476,6 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
                   className="flex-1 btn-secondary"
                 >
                   Previous
-                </button>
-              )}
-              {currentStep > 0 && currentStep < steps.length - 1 && (
-                <button
-                  onClick={handleSkip}
-                  className="flex-1 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-                >
-                  Skip
                 </button>
               )}
               <button
