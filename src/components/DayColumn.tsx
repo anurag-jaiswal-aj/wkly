@@ -39,14 +39,15 @@ const DayColumn = memo(function DayColumn({
       role="region"
       aria-label={`Tasks for ${format(date, 'EEEE, MMMM d, yyyy')}`}
       className={`
-        flex-1 min-w-0 border-r border-gray-200 dark:border-gray-800 last:border-r-0
+        flex-1 min-w-[200px] max-w-[300px] border-r border-gray-200 dark:border-gray-800 last:border-r-0
+        flex flex-col h-full
         ${today ? 'bg-gray-50 dark:bg-gray-900' : ''}
         ${isOver ? 'bg-gray-100 dark:bg-gray-800' : ''}
         transition-colors
       `}
     >
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 sticky top-0 
-                      bg-white dark:bg-black z-10">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0
+                      bg-white dark:bg-black">
         <div className="text-center">
           <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">
             {format(date, 'EEE')}
@@ -57,7 +58,7 @@ const DayColumn = memo(function DayColumn({
         </div>
       </div>
 
-      <div className="p-3">
+      <div className="p-3 flex-1 overflow-y-auto">
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard

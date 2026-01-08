@@ -131,7 +131,7 @@ export default function WeekView({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex h-full overflow-x-auto">
+          <div className="flex h-full">
             {days.map((day) => (
               <DayColumn
                 key={day.toISOString()}
