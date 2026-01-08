@@ -298,12 +298,19 @@ export default function Planner() {
             </button>
 
             <button
-              onClick={() => setFocusMode(true)}
-              className="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm flex items-center gap-1"
-              title="Focus Mode - Today's tasks with Pomodoro timer (Ctrl+F)"
+              onClick={() => setStatsOpen(!statsOpen)}
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              title="Weekly stats (Ctrl+S)"
             >
-              <span className="material-symbols-outlined text-base">target</span>
-              Focus
+              <span className="material-symbols-outlined text-xl">bar_chart</span>
+            </button>
+
+            <button
+              onClick={() => setFocusMode(true)}
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              title="Focus Mode (Ctrl+F)"
+            >
+              <span className="material-symbols-outlined text-xl">target</span>
             </button>
 
             <button
@@ -316,19 +323,20 @@ export default function Planner() {
 
             <button
               onClick={handleSignOut}
-              className="text-sm text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              title="Sign out"
             >
-              Sign out
+              <span className="material-symbols-outlined text-xl">logout</span>
             </button>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 max-w-md">
+          <div className="flex-1 max-w-lg">
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search tasks across all weeks... (Ctrl+K or /)"
+              placeholder="Search tasks... (Ctrl+K or /)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 
@@ -338,154 +346,62 @@ export default function Planner() {
             />
           </div>
 
-          <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500">Total:</span>
-              <span className="font-medium">{weekStats.total}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500">Done:</span>
-              <span className="font-medium">{weekStats.completed}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500">Pending:</span>
-              <span className="font-medium">{weekStats.pending}</span>
-            </div>
-            {weekStats.highPriority > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">High Priority:</span>
-                <span className="font-medium">{weekStats.highPriority}</span>
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setFilterPriority('all')
+                setFilterStatus('all')
+                setShowTodayOnly(false)
+                setShowCompleted(true)
+                setSearchQuery('')
+              }}
+              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 
+                       hover:bg-gray-100 dark:hover:bg-gray-900 rounded transition-colors"
+              title="Clear all filters"
+            >
+              Clear filters
+            </button>
           </div>
         </div>
 
-        {/* Filters Bar */}
-        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-          <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Filters:</span>
-          
-          {/* Priority Filter */}
-          <div className="flex items-center gap-1">
+        {/* Quick Filters */}
+        <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setFilterPriority('all')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
-                filterPriority === 'all'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilterPriority('high')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
+              onClick={() => setFilterPriority(filterPriority === 'high' ? 'all' : 'high')}
+              className={`px-3 py-1.5 text-xs rounded transition-all flex items-center gap-1 ${
                 filterPriority === 'high'
                   ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
                   : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
               }`}
             >
-              !!! High
+              !!! High Priority
             </button>
             <button
-              onClick={() => setFilterPriority('medium')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
-                filterPriority === 'medium'
-                  ? 'bg-gray-700 dark:bg-gray-300 text-white dark:text-black'
+              onClick={() => setShowTodayOnly(!showTodayOnly)}
+              className={`px-3 py-1.5 text-xs rounded transition-all ${
+                showTodayOnly
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
                   : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
               }`}
             >
-              !! Medium
+              Today Only
             </button>
             <button
-              onClick={() => setFilterPriority('low')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
-                filterPriority === 'low'
-                  ? 'bg-gray-500 dark:bg-gray-500 text-white'
+              onClick={() => setShowCompleted(!showCompleted)}
+              className={`px-3 py-1.5 text-xs rounded transition-all ${
+                !showCompleted
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
                   : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
               }`}
             >
-              ! Low
+              {showCompleted ? 'Hide Completed' : 'Show Completed'}
             </button>
           </div>
-
-          <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-
-          {/* Status Filter */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setFilterStatus('all')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
-                filterStatus === 'all'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilterStatus('pending')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
-                filterStatus === 'pending'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
-              }`}
-            >
-              Pending
-            </button>
-            <button
-              onClick={() => setFilterStatus('completed')}
-              className={`px-3 py-1 text-xs rounded transition-all ${
-                filterStatus === 'completed'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-                  : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
-              }`}
-            >
-              Completed
-            </button>
+          
+          <div className="text-xs text-gray-500">
+            {weekStats.total} tasks · {weekStats.completed} done · {weekStats.pending} pending
           </div>
-
-          <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-
-          {/* Quick Toggles */}
-          <button
-            onClick={() => setShowTodayOnly(!showTodayOnly)}
-            className={`px-3 py-1 text-xs rounded transition-all ${
-              showTodayOnly
-                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-                : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
-            }`}
-          >
-            Today Only
-          </button>
-
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className={`px-3 py-1 text-xs rounded transition-all ${
-              !showCompleted
-                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-black'
-                : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
-            }`}
-          >
-            {showCompleted ? 'Hide Completed' : 'Show Completed'}
-          </button>
-
-          {/* Clear Filters */}
-          {(filterPriority !== 'all' || filterStatus !== 'all' || showTodayOnly || !showCompleted) && (
-            <>
-              <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-              <button
-                onClick={() => {
-                  setFilterPriority('all')
-                  setFilterStatus('all')
-                  setShowTodayOnly(false)
-                  setShowCompleted(true)
-                }}
-                className="px-3 py-1 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              >
-                Clear all
-              </button>
-            </>
-          )}
         </div>
       </motion.header>
 
@@ -561,7 +477,7 @@ export default function Planner() {
         <FocusMode
           tasks={tasks}
           onClose={() => setFocusMode(false)}
-          onToggle={toggleTaskComplete}
+          onToggle={(taskId) => toggleTaskComplete(taskId, tasks.find(t => t.id === taskId)?.completed || false)}
           onEdit={handleTaskEdit}
         />
       )}
