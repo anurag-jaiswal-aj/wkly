@@ -76,6 +76,7 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
       animate={{ opacity: isDragging ? 0.5 : 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
+      data-tour="task-card"
       className={`
         group p-4 mb-2 card cursor-grab active:cursor-grabbing
         hover:shadow-lg hover:border-gray-400 dark:hover:border-gray-500

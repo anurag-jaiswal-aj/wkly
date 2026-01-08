@@ -86,6 +86,7 @@ const DayColumn = memo(function DayColumn({
         <button
           onClick={() => onAddTask(dateStr)}
           aria-label={`Add task for ${format(date, 'EEEE, MMMM d')}`}
+          data-tour="add-task"
           className="w-full py-2.5 text-sm text-gray-400 hover:text-black dark:hover:text-white 
                      border border-dashed border-gray-300 dark:border-gray-700
                      hover:border-gray-500 dark:hover:border-gray-500

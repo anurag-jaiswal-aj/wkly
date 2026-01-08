@@ -98,7 +98,7 @@ export default function WeekView({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4" data-tour="week-navigation">
           <button
             onClick={goToPreviousWeek}
             className="text-gray-500 hover:text-black dark:hover:text-white"

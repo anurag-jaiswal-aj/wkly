@@ -354,6 +354,7 @@ export default function Planner() {
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              data-tour="theme-toggle"
             >
               <span className="material-symbols-outlined text-xl" aria-hidden="true">{isDark ? 'light_mode' : 'dark_mode'}</span>
             </button>
@@ -363,6 +364,7 @@ export default function Planner() {
               aria-label="View weekly statistics"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Weekly stats (Ctrl+S)"
+              data-tour="stats"
             >
               <span className="material-symbols-outlined text-xl" aria-hidden="true">bar_chart</span>
             </button>
@@ -372,6 +374,7 @@ export default function Planner() {
               aria-label="Enter focus mode"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Focus Mode (Ctrl+F)"
+              data-tour="focus-mode"
             >
               <span className="material-symbols-outlined text-xl" aria-hidden="true">target</span>
             </button>
@@ -381,8 +384,19 @@ export default function Planner() {
               aria-label="View keyboard shortcuts"
               className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
               title="Keyboard shortcuts (?)"
+              data-tour="shortcuts"
             >
               <span className="material-symbols-outlined text-xl" aria-hidden="true">keyboard</span>
+            </button>
+
+            <button
+              onClick={() => setShowOnboarding(true)}
+              aria-label="Show tour"
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              title="Show tour"
+              data-tour="tour-button"
+            >
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">help</span>
             </button>
 
             <button
@@ -397,7 +411,7 @@ export default function Planner() {
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 max-w-lg">
+          <div className="flex-1 max-w-lg" data-tour="search">
             <input
               ref={searchInputRef}
               type="text"
@@ -412,7 +426,7 @@ export default function Planner() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-tour="filters">
             <button
               onClick={() => {
                 setFilterPriority('all')
@@ -585,6 +599,7 @@ export default function Planner() {
       {/* Onboarding Tour */}
       {showOnboarding && (
         <OnboardingTour
+          isOpen={showOnboarding}
           onComplete={() => {
             setShowOnboarding(false)
             localStorage.setItem('hasSeenOnboarding', 'true')
