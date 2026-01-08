@@ -155,23 +155,104 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
 
     const step = steps[currentStep]
     if (step.target) {
-      const element = document.querySelector(step.target)
-      if (element) {
-        const rect = element.getBoundingClientRect()
-        setHighlightRect(rect)
-      } else {
-        setHighlightRect(null)
+      // Wait for element to be rendered, retry up to 10 times
+      let attempts = 0
+      const maxAttempts = 10
+      let targetElement: Element | null = null
+      
+      const findElement = () => {
+        // For elements with multiple matches, find the first visible one
+        const elements = document.querySelectorAll(step.target!)
+        let element: Element | null = null
+        
+        if (elements.length > 1) {
+          // Find first visible element
+          for (let i = 0; i < elements.length; i++) {
+            const rect = elements[i].getBoundingClientRect()
+            if (rect.width > 0 && rect.height > 0) {
+              element = elements[i]
+              break
+            }
+          }
+        } else {
+          element = elements[0] || null
+        }
+        
+        if (element) {
+          targetElement = element
+          const rect = element.getBoundingClientRect()
+          setHighlightRect(rect)
+          
+          // Temporarily boost z-index
+          const originalZIndex = (element as HTMLElement).style.zIndex
+          const originalPosition = (element as HTMLElement).style.position;
+          (element as HTMLElement).style.position = 'relative';
+          (element as HTMLElement).style.zIndex = '10000'
+          
+          // Scroll element into view if needed with a small delay
+          setTimeout(() => {
+            element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+          }, 100)
+          
+          // Restore original z-index when moving to next step
+          return () => {
+            if (targetElement) {
+              (targetElement as HTMLElement).style.zIndex = originalZIndex;
+              (targetElement as HTMLElement).style.position = originalPosition
+            }
+          }
+        } else if (attempts < maxAttempts) {
+          attempts++
+          setTimeout(findElement, 150)
+        } else {
+          setHighlightRect(null)
+        }
+      }
+      
+      // Small initial delay to let DOM settle
+      const timer = setTimeout(findElement, 50)
+      return () => {
+        clearTimeout(timer)
+        if (targetElement) {
+          (targetElement as HTMLElement).style.zIndex = '';
+          (targetElement as HTMLElement).style.position = ''
+        }
       }
     } else {
       setHighlightRect(null)
     }
   }, [currentStep, isOpen])
 
+  // Update highlight on window resize
+  useEffect(() => {
+    if (!isOpen || !highlightRect) return
+
+    const handleResize = () => {
+      const step = steps[currentStep]
+      if (step.target) {
+        const element = document.querySelector(step.target)
+        if (element) {
+          const rect = element.getBoundingClientRect()
+          setHighlightRect(rect)
+        }
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [currentStep, isOpen, highlightRect])
+
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
       handleComplete()
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
     }
   }
 
@@ -194,7 +275,7 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50"
+        className="fixed inset-0 z-[9999]"
       >
         {/* Dark overlay with spotlight cutout */}
         <div className="absolute inset-0 pointer-events-none">
@@ -368,6 +449,14 @@ export default function OnboardingTour({ onComplete, isOpen }: OnboardingTourPro
             {/* Actions */}
             <div className="flex gap-3">
               {currentStep > 0 && (
+                <button
+                  onClick={handlePrevious}
+                  className="flex-1 btn-secondary"
+                >
+                  Previous
+                </button>
+              )}
+              {currentStep > 0 && currentStep < steps.length - 1 && (
                 <button
                   onClick={handleSkip}
                   className="flex-1 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"

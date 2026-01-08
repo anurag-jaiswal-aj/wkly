@@ -426,7 +426,7 @@ export default function Planner() {
             />
           </div>
 
-          <div className="flex items-center gap-2" data-tour="filters">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setFilterPriority('all')
@@ -447,7 +447,7 @@ export default function Planner() {
 
         {/* Quick Filters */}
         <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-tour="filters">
             <button
               onClick={() => setFilterPriority(filterPriority === 'high' ? 'all' : 'high')}
               aria-label={filterPriority === 'high' ? 'Show all priorities' : 'Show only high priority tasks'}
