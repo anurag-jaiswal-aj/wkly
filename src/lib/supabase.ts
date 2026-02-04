@@ -4,10 +4,22 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  console.error('⚠️ Supabase environment variables are not set. Please create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY')
+  // Create a dummy client to prevent app crash during development
+  // You'll need to set up proper Supabase credentials to use auth features
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Use dummy values if env vars are missing (for development without backend)
+const url = supabaseUrl || 'https://placeholder.supabase.co'
+const key = supabaseAnonKey || 'placeholder-key'
+
+export const supabase = createClient(url, key, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: !!supabaseUrl, // Only auto-refresh if we have real credentials
+    detectSessionInUrl: true,
+  },
+})
 
 export type Database = {
   public: {
