@@ -7,6 +7,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useOfflineQueue } from '@/hooks/useOfflineQueue'
 import { Task, Subtask } from '@/types'
 import WeekView from '@/components/WeekView'
+import MonthView from '@/components/MonthView'
 import TaskCard from '@/components/TaskCard'
 import NetworkStatus from '@/components/NetworkStatus'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -55,6 +56,7 @@ export default function Planner() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Check if user needs onboarding
@@ -350,6 +352,34 @@ export default function Planner() {
               {user?.email}
             </div>
 
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded p-1">
+              <button
+                onClick={() => setViewMode('week')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  viewMode === 'week'
+                    ? 'bg-white dark:bg-black shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+                aria-label="Week view"
+                title="Week view"
+              >
+                <span className="material-symbols-outlined text-sm">view_week</span>
+              </button>
+              <button
+                onClick={() => setViewMode('month')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  viewMode === 'month'
+                    ? 'bg-white dark:bg-black shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+                aria-label="Month view"
+                title="Month view"
+              >
+                <span className="material-symbols-outlined text-sm">calendar_month</span>
+              </button>
+            </div>
+
             <button
               onClick={toggleTheme}
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -559,7 +589,7 @@ export default function Planner() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : viewMode === 'week' ? (
           <WeekView
             weekStart={weekStart}
             tasks={filteredTasks}
@@ -570,6 +600,17 @@ export default function Planner() {
             onAddTask={handleAddTask}
             onWeekChange={setWeekStart}
             isSearching={false}
+          />
+        ) : (
+          <MonthView
+            currentDate={weekStart}
+            tasks={filteredTasks}
+            onDateChange={setWeekStart}
+            onTaskEdit={handleTaskEdit}
+            onTaskToggle={toggleTaskComplete}
+            onTaskDelete={deleteTask}
+            onTaskReorder={reorderTasks}
+            onAddTask={handleAddTask}
           />
         )}
       </main>
