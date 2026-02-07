@@ -2,6 +2,7 @@ import { useState, FormEvent, useEffect } from 'react'
 import { Task, Subtask } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DEFAULT_TEMPLATES, TaskTemplate } from '@/data/templates'
+import { parseNaturalLanguage } from '@/utils/naturalLanguageParser'
 
 interface TaskModalProps {
   isOpen: boolean
@@ -211,12 +212,29 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                 id="title"
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setTitle(value)
+                  
+                  // Auto-parse natural language if creating new task
+                  if (!task && value.length > 5) {
+                    const parsed = parseNaturalLanguage(value)
+                    if (parsed.date !== date && !defaultDate) {
+                      setDate(parsed.date)
+                    }
+                    if (parsed.priority && !priority) {
+                      setPriority(parsed.priority)
+                    }
+                  }
+                }}
                 className="input-base"
-                placeholder="What needs to be done?"
+                placeholder="e.g., 'Team meeting Friday at 2pm high priority'"
                 autoFocus
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Tip: Include dates, times, and priorities in your title
+              </p>
             </div>
 
             <div>

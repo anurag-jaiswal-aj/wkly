@@ -11,6 +11,7 @@ import TaskCard from '@/components/TaskCard'
 import NetworkStatus from '@/components/NetworkStatus'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import OnboardingTour from '@/components/OnboardingTour'
+import QuickAddTask from '@/components/QuickAddTask'
 import { motion } from 'framer-motion'
 import { isToday, parseISO, startOfWeek } from 'date-fns'
 import { supabase } from '@/lib/supabase'
@@ -411,18 +412,27 @@ export default function Planner() {
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 max-w-lg" data-tour="search">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search tasks... (Ctrl+K or /)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search tasks"
-              className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 
-                         rounded-lg bg-white dark:bg-gray-900 
-                         focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600
-                         transition-all"
+          <div className="flex-1 max-w-2xl" data-tour="quick-add">
+            <QuickAddTask 
+              onCreateTask={async (parsed) => {
+                const result = await createTask({
+                  title: parsed.title,
+                  description: parsed.description || null,
+                  date: parsed.date,
+                  completed: false,
+                  order_index: 0,
+                  reminder_time: parsed.time || null,
+                  recurrence: null,
+                  recurrence_parent_id: null,
+                  priority: parsed.priority || 'medium',
+                })
+                
+                if (result.error) {
+                  toast.showError('Failed to create task')
+                } else {
+                  toast.showSuccess('Task created successfully')
+                }
+              }}
             />
           </div>
 
@@ -443,6 +453,23 @@ export default function Planner() {
               Clear filters
             </button>
           </div>
+        </div>
+
+        {/* Search */}
+        <div className="mt-3">
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search tasks... (Ctrl+K or /)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search tasks"
+            className="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 
+                       rounded-lg bg-white dark:bg-gray-900 
+                       focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600
+                       transition-all"
+            data-tour="search"
+          />
         </div>
 
         {/* Quick Filters */}
