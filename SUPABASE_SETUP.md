@@ -1,5 +1,17 @@
 # Supabase Setup Instructions
 
+## ⚠️ Project Paused? Resume It First!
+
+If you see a message that your project is paused:
+
+1. Go to [https://app.supabase.com](https://app.supabase.com)
+2. Find your "wkly" project in the dashboard
+3. Click **"Resume Project"** or **"Restore"** button
+4. Wait ~30 seconds for the project to become active
+5. Once active, continue to **Step 2** below to get your credentials
+
+---
+
 ## Issue: Connection Errors
 
 The Supabase project configured in your `.env` file is not accessible. This causes repeated connection errors:
@@ -7,9 +19,18 @@ The Supabase project configured in your `.env` file is not accessible. This caus
 ERR_NAME_NOT_RESOLVED: https://qfntrwggpeptnsxvaoie.supabase.co
 ```
 
-## Solution: Create a New Supabase Project
+## Solution: Resume or Create a Supabase Project
 
-### Step 1: Create Supabase Account & Project
+### Option A: Resume Existing Project (If You Have One)
+
+1. Go to [https://app.supabase.com](https://app.supabase.com)
+2. Log in to your account
+3. Find the "wkly" project (or your project name)
+4. Click **"Resume Project"** button
+5. Wait for the project to become active (~30 seconds)
+6. Skip to **Step 2** below to get your credentials
+
+### Option B: Create a New Supabase Project
 
 1. Go to [https://app.supabase.com](https://app.supabase.com)
 2. Sign up or log in
