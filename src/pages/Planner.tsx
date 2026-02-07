@@ -327,7 +327,7 @@ export default function Planner() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Skip link for keyboard navigation */}
       <a href="#main-content" className="skip-link">
         Skip to main content
@@ -339,7 +339,7 @@ export default function Planner() {
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-3 md:py-4"
+        className="border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-3 md:py-4 flex-shrink-0"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-3 md:mb-4">
           <h1 className="text-xl md:text-2xl font-light tracking-tight">Wkly</h1>
@@ -503,7 +503,7 @@ export default function Planner() {
       </Suspense>
 
       {/* Main Content */}
-      <main id="main-content" className="flex-1 overflow-hidden" role="main" aria-label="Task planner">
+      <main id="main-content" className="flex-1 min-h-0 overflow-hidden" role="main" aria-label="Task planner">
         {searchQuery ? (
           <div className="h-full overflow-y-auto p-6">
             <div className="max-w-4xl mx-auto">

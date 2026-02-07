@@ -95,9 +95,9 @@ export default function WeekView({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800 p-3 md:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="border-b border-gray-200 dark:border-gray-800 p-3 md:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
         <div className="flex items-center gap-2 md:gap-4" data-tour="week-navigation">
           <button
             onClick={goToPreviousWeek}
@@ -127,7 +127,7 @@ export default function WeekView({
       </div>
 
       {/* Week Grid */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
