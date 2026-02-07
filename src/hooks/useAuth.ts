@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -8,6 +8,12 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Skip auth if Supabase is not configured
+    if (!isSupabaseConfigured) {
+      setLoading(false)
+      return
+    }
+
     // Check active sessions and sets the user
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
@@ -29,6 +35,12 @@ export function useAuth() {
   }, [])
 
   const signUp = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return { 
+        data: null, 
+        error: { message: 'Supabase is not configured. Please see SUPABASE_SETUP.md for setup instructions.' } as any 
+      }
+    }
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -41,6 +53,12 @@ export function useAuth() {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return { 
+        data: null, 
+        error: { message: 'Supabase is not configured. Please see SUPABASE_SETUP.md for setup instructions.' } as any 
+      }
+    }
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
