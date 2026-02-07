@@ -97,28 +97,30 @@ export default function WeekView({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4" data-tour="week-navigation">
+      <div className="border-b border-gray-200 dark:border-gray-800 p-3 md:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2 md:gap-4" data-tour="week-navigation">
           <button
             onClick={goToPreviousWeek}
-            className="text-gray-500 hover:text-black dark:hover:text-white"
+            className="text-gray-500 hover:text-black dark:hover:text-white p-1"
+            aria-label="Previous week"
           >
-            <span className="material-symbols-outlined">chevron_left</span>
+            <span className="material-symbols-outlined text-xl md:text-2xl">chevron_left</span>
           </button>
-          <h2 className="text-lg font-light">
+          <h2 className="text-base md:text-lg font-light whitespace-nowrap">
             {format(days[0], 'MMM d')} – {format(days[6], 'MMM d, yyyy')}
           </h2>
           <button
             onClick={goToNextWeek}
-            className="text-gray-500 hover:text-black dark:hover:text-white"
+            className="text-gray-500 hover:text-black dark:hover:text-white p-1"
+            aria-label="Next week"
           >
-            <span className="material-symbols-outlined">chevron_right</span>
+            <span className="material-symbols-outlined text-xl md:text-2xl">chevron_right</span>
           </button>
         </div>
 
         <button
           onClick={goToToday}
-          className="btn-secondary text-sm px-3 py-1"
+          className="btn-secondary text-xs md:text-sm px-3 py-1.5 md:py-2 w-full sm:w-auto"
         >
           Today
         </button>
@@ -131,7 +133,7 @@ export default function WeekView({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex h-full">
+          <div className="flex h-full overflow-x-auto">
             {days.map((day) => (
               <DayColumn
                 key={day.toISOString()}

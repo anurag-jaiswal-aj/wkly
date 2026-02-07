@@ -39,26 +39,27 @@ const DayColumn = memo(function DayColumn({
       role="region"
       aria-label={`Tasks for ${format(date, 'EEEE, MMMM d, yyyy')}`}
       className={`
-        flex-1 min-w-[200px] max-w-[300px] border-r border-gray-200 dark:border-gray-800 last:border-r-0
+        flex-1 min-w-[280px] sm:min-w-[200px] md:min-w-[250px] max-w-[400px] md:max-w-[300px] 
+        border-r border-gray-200 dark:border-gray-800 last:border-r-0
         flex flex-col h-full
         ${today ? 'bg-gray-50 dark:bg-gray-900' : ''}
         ${isOver ? 'bg-gray-100 dark:bg-gray-800' : ''}
         transition-colors
       `}
     >
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0
+      <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0
                       bg-white dark:bg-black">
         <div className="text-center">
-          <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">
+          <div className="text-xs uppercase tracking-wider text-gray-500 mb-0.5 md:mb-1">
             {format(date, 'EEE')}
           </div>
-          <div className={`text-2xl font-light ${today ? 'font-medium' : ''}`}>
+          <div className={`text-xl md:text-2xl font-light ${today ? 'font-medium' : ''}`}>
             {format(date, 'd')}
           </div>
         </div>
       </div>
 
-      <div className="p-3 flex-1 overflow-y-auto">
+      <div className="p-2 md:p-3 flex-1 overflow-y-auto">
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard
@@ -84,7 +85,7 @@ const DayColumn = memo(function DayColumn({
           onClick={() => onAddTask(dateStr)}
           aria-label={`Add task for ${format(date, 'EEEE, MMMM d')}`}
           data-tour="add-task"
-          className="w-full py-2.5 text-sm text-gray-400 hover:text-black dark:hover:text-white 
+          className="w-full py-2 md:py-2.5 text-xs md:text-sm text-gray-400 hover:text-black dark:hover:text-white 
                      border border-dashed border-gray-300 dark:border-gray-700
                      hover:border-gray-500 dark:hover:border-gray-500
                      hover:bg-gray-50 dark:hover:bg-gray-900

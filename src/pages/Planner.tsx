@@ -339,13 +339,13 @@ export default function Planner() {
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-200 dark:border-gray-800 px-6 py-4"
+        className="border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-3 md:py-4"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-light tracking-tight">Wkly</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-3 md:mb-4">
+          <h1 className="text-xl md:text-2xl font-light tracking-tight">Wkly</h1>
 
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-500">
+          <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
+            <div className="text-gray-500 truncate max-w-[150px] sm:max-w-none">
               {user?.email}
             </div>
 
