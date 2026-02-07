@@ -8,6 +8,7 @@ import { useOfflineQueue } from '@/hooks/useOfflineQueue'
 import { Task, Subtask } from '@/types'
 import WeekView from '@/components/WeekView'
 import MonthView from '@/components/MonthView'
+import DayView from '@/components/DayView'
 import TaskCard from '@/components/TaskCard'
 import NetworkStatus from '@/components/NetworkStatus'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -56,7 +57,7 @@ export default function Planner() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
+  const [viewMode, setViewMode] = useState<'week' | 'month' | 'day'>('week')
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Check if user needs onboarding
@@ -88,11 +89,13 @@ export default function Planner() {
     setIsModalOpen(true)
   }, [debouncedSearchQuery])
 
-  const handleAddTask = useCallback((date: string) => {
+  const handleAddTask = useCallback((date: string, time?: string) => {
     setEditingTask(null)
     setDefaultDate(date)
     setTaskSubtasks([])
     setIsModalOpen(true)
+    // If time is provided, we could store it to pre-fill the modal
+    // For now, the time will be set via natural language or manual selection
   }, [])
 
   const goToToday = useCallback(() => {
@@ -355,6 +358,18 @@ export default function Planner() {
             {/* View Toggle */}
             <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded p-1">
               <button
+                onClick={() => setViewMode('day')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  viewMode === 'day'
+                    ? 'bg-white dark:bg-black shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+                aria-label="Day view"
+                title="Day view"
+              >
+                <span className="material-symbols-outlined text-sm">today</span>
+              </button>
+              <button
                 onClick={() => setViewMode('week')}
                 className={`px-2 py-1 text-xs rounded transition-colors ${
                   viewMode === 'week'
@@ -589,6 +604,17 @@ export default function Planner() {
               </div>
             </div>
           </div>
+        ) : viewMode === 'day' ? (
+          <DayView
+            currentDate={weekStart}
+            tasks={filteredTasks}
+            onDateChange={setWeekStart}
+            onTaskEdit={handleTaskEdit}
+            onTaskToggle={toggleTaskComplete}
+            onTaskDelete={deleteTask}
+            onTaskReorder={reorderTasks}
+            onAddTask={handleAddTask}
+          />
         ) : viewMode === 'week' ? (
           <WeekView
             weekStart={weekStart}

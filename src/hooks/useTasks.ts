@@ -190,8 +190,18 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
     return date.toISOString().split('T')[0]
   }
 
-  const reorderTasks = async (taskId: string, newDate: string, newOrderIndex: number) => {
-    return updateTask(taskId, { date: newDate, order_index: newOrderIndex })
+  const reorderTasks = async (taskId: string, newDate: string, newOrderIndex: number, newTime?: string) => {
+    const updates: Partial<Task> = { 
+      date: newDate, 
+      order_index: newOrderIndex 
+    }
+    
+    // If time is provided, update reminder_time
+    if (newTime !== undefined) {
+      updates.reminder_time = newTime || null
+    }
+    
+    return updateTask(taskId, updates)
   }
 
   return {

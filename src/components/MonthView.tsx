@@ -113,7 +113,6 @@ export default function MonthView({
   onDateChange,
   onTaskEdit,
   onTaskToggle,
-  onTaskDelete,
   onAddTask,
   onTaskReorder
 }: MonthViewProps) {
