@@ -39,7 +39,7 @@ const DayColumn = memo(function DayColumn({
       role="region"
       aria-label={`Tasks for ${format(date, 'EEEE, MMMM d, yyyy')}`}
       className={`
-        flex-1 min-w-[280px] sm:min-w-[200px] lg:min-w-[220px] max-w-[400px] lg:max-w-none
+        min-w-[280px] lg:min-w-0 lg:w-full
         border-r border-gray-200 dark:border-gray-800 last:border-r-0
         flex flex-col h-full
         ${today ? 'bg-gray-50 dark:bg-gray-900' : ''}
