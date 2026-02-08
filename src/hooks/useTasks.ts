@@ -28,7 +28,10 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase query error:', error)
+        throw error
+      }
       
       // Transform the data to include tags directly on the task
       const tasksWithTags = (data || []).map((task: any) => ({
@@ -83,6 +86,11 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
       .insert(cleanTask)
       .select()
       .single()
+
+    if (error) {
+      console.error('Error creating task:', error)
+      console.error('Task data attempted:', cleanTask)
+    }
 
     if (!error && data) {
       // Optimistically add to local state
