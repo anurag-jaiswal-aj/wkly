@@ -30,9 +30,12 @@ export type Database = {
           date: string
           completed: boolean
           order_index: number
-          reminder_time: string | null
-          recurrence: string | null
           created_at: string
+          reminder_time?: string | null
+          reminder_enabled?: boolean
+          recurrence?: string | null
+          recurrence_parent_id?: string | null
+          priority?: string | null
         }
         Insert: {
           id?: string
@@ -43,8 +46,10 @@ export type Database = {
           completed?: boolean
           order_index?: number
           reminder_time?: string | null
+          reminder_enabled?: boolean
           recurrence?: string | null
-          created_at?: string
+          recurrence_parent_id?: string | null
+          priority?: string | null
         }
         Update: {
           id?: string
@@ -55,8 +60,10 @@ export type Database = {
           completed?: boolean
           order_index?: number
           reminder_time?: string | null
+          reminder_enabled?: boolean
           recurrence?: string | null
-          created_at?: string
+          recurrence_parent_id?: string | null
+          priority?: string | null
         }
       }
       subtasks: {

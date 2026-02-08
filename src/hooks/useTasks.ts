@@ -73,9 +73,14 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
+    // Clean task object - remove undefined values
+    const cleanTask = Object.fromEntries(
+      Object.entries({ ...task, user_id: user.id }).filter(([_, v]) => v !== undefined)
+    )
+
     const { data, error } = await supabase
       .from('tasks')
-      .insert([{ ...task, user_id: user.id }])
+      .insert(cleanTask)
       .select()
       .single()
 
