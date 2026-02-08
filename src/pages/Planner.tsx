@@ -239,17 +239,22 @@ export default function Planner() {
         
         toast.showSuccess('Task updated successfully')
       } else {
-        const result = await createTask({
+        // Only include defined fields to handle missing database columns gracefully
+        const taskToCreate: any = {
           title: taskData.title!,
           description: taskData.description || null,
           date: taskData.date!,
           completed: false,
           order_index: 0,
-          reminder_time: null,
-          recurrence: taskData.recurrence || null,
-          recurrence_parent_id: taskData.recurrence_parent_id || null,
-          priority: taskData.priority,
-        })
+        }
+        
+        // Only add optional fields if they have values
+        if (taskData.recurrence) taskToCreate.recurrence = taskData.recurrence
+        if (taskData.recurrence_parent_id) taskToCreate.recurrence_parent_id = taskData.recurrence_parent_id
+        if (taskData.priority) taskToCreate.priority = taskData.priority
+        if (taskData.reminder_time) taskToCreate.reminder_time = taskData.reminder_time
+        
+        const result = await createTask(taskToCreate)
         
         if (result.error) {
           toast.showError('Failed to create task')

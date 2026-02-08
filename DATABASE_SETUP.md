@@ -1,19 +1,35 @@
-# Tags System Setup
+# Database Setup Guide
 
-## Database Migration
+## Required Migrations
 
-Before using the tags feature, you need to run the database migration:
+Run these migrations **in order** in your Supabase SQL Editor:
 
-1. Go to your Supabase project dashboard
-2. Navigate to **SQL Editor**
-3. Open the file: `supabase/migrations/003_tags.sql`
-4. Copy the SQL and paste it into the SQL Editor
-5. Click **Run** to execute the migration
+### **Step 1: Add Task Columns (Required First!)**
+**File:** `supabase/migrations/002_add_task_columns.sql`
 
-This will create:
+This adds essential columns to your tasks table:
+- `reminder_time` - Schedule task reminders
+- `reminder_enabled` - Toggle for reminders
+- `recurrence` - Repeat pattern (none, daily, weekly, biweekly, monthly)
+- `recurrence_parent_id` - Links recurring tasks
+- `priority` - Task priority (low, medium, high)
+
+### **Step 2: Tags System**
+**File:** `supabase/migrations/003_tags.sql`
+
+This creates the tags feature:
 - `tags` table for storing user tags
 - `task_tags` junction table for many-to-many relationships
 - Proper RLS policies for security
+
+### How to Run Migrations
+
+1. Go to your Supabase project dashboard
+2. Navigate to **SQL Editor**
+3. Open `supabase/migrations/002_add_task_columns.sql`
+4. Copy the SQL and paste it into the SQL Editor
+5. Click **Run** to execute
+6. Repeat for `003_tags.sql`
 
 ## Features
 
