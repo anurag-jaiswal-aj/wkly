@@ -65,7 +65,8 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
     if (isOpen) {
       loadData()
     }
-  }, [task, defaultDate, isOpen, existingSubtasks, getTaskTags])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id, defaultDate, isOpen])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

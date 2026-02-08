@@ -488,13 +488,21 @@ export default function Planner() {
           <div className="flex-1 max-w-2xl" data-tour="quick-add">
             <QuickAddTask 
               onCreateTask={async (parsed) => {
+                // Convert time string to full ISO timestamp if provided
+                let reminderTime = null
+                if (parsed.time) {
+                  // Combine date and time into ISO timestamp with timezone
+                  // Format: YYYY-MM-DDTHH:mm:ss+00:00
+                  reminderTime = `${parsed.date}T${parsed.time}:00Z`
+                }
+                
                 const result = await createTask({
                   title: parsed.title,
                   description: parsed.description || null,
                   date: parsed.date,
                   completed: false,
                   order_index: 0,
-                  reminder_time: parsed.time || null,
+                  reminder_time: reminderTime,
                   recurrence: null,
                   recurrence_parent_id: null,
                   priority: parsed.priority || 'medium',
