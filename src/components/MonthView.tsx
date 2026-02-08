@@ -45,14 +45,14 @@ function CalendarDay({ date, currentMonth, tasks, onTaskEdit, onTaskToggle, onAd
     <div
       ref={setNodeRef}
       className={`
-        min-h-[120px] border border-gray-200 dark:border-gray-800 p-2
+        min-h-[120px] max-h-[200px] border border-gray-200 dark:border-gray-800 p-2 flex flex-col
         ${!isCurrentMonth ? 'bg-gray-50 dark:bg-gray-950 opacity-50' : 'bg-white dark:bg-black'}
         ${today ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
         ${isOver ? 'bg-blue-50 dark:bg-blue-950' : ''}
-        transition-colors
+        transition-colors group
       `}
     >
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 flex-shrink-0">
         <span className={`text-sm font-medium ${
           today ? 'text-blue-600 dark:text-blue-400' : 
           isCurrentMonth ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-600'
@@ -70,7 +70,7 @@ function CalendarDay({ date, currentMonth, tasks, onTaskEdit, onTaskToggle, onAd
         )}
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 flex-1 min-h-0 overflow-y-auto">
         {displayedTasks.map(task => (
           <div
             key={task.id}
