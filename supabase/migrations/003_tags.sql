@@ -23,18 +23,22 @@ CREATE INDEX IF NOT EXISTS idx_task_tags_tag_id ON task_tags(tag_id);
 -- RLS Policies for tags
 ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own tags" ON tags;
 CREATE POLICY "Users can view their own tags"
   ON tags FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create their own tags" ON tags;
 CREATE POLICY "Users can create their own tags"
   ON tags FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own tags" ON tags;
 CREATE POLICY "Users can update their own tags"
   ON tags FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own tags" ON tags;
 CREATE POLICY "Users can delete their own tags"
   ON tags FOR DELETE
   USING (auth.uid() = user_id);
@@ -42,6 +46,7 @@ CREATE POLICY "Users can delete their own tags"
 -- RLS Policies for task_tags
 ALTER TABLE task_tags ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own task_tags" ON task_tags;
 CREATE POLICY "Users can view their own task_tags"
   ON task_tags FOR SELECT
   USING (
@@ -52,6 +57,7 @@ CREATE POLICY "Users can view their own task_tags"
     )
   );
 
+DROP POLICY IF EXISTS "Users can create their own task_tags" ON task_tags;
 CREATE POLICY "Users can create their own task_tags"
   ON task_tags FOR INSERT
   WITH CHECK (
@@ -62,6 +68,7 @@ CREATE POLICY "Users can create their own task_tags"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete their own task_tags" ON task_tags;
 CREATE POLICY "Users can delete their own task_tags"
   ON task_tags FOR DELETE
   USING (
