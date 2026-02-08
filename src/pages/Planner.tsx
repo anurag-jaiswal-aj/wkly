@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTasks } from '@/hooks/useTasks'
+import { useTags } from '@/hooks/useTags'
 import { useTheme } from '@/hooks/useTheme'
 import { useToast } from '@/contexts/ToastContext'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useOfflineQueue } from '@/hooks/useOfflineQueue'
-import { Task, Subtask } from '@/types'
+import { Task, Subtask, Tag } from '@/types'
 import WeekView from '@/components/WeekView'
 import MonthView from '@/components/MonthView'
 import DayView from '@/components/DayView'
@@ -43,12 +44,14 @@ export default function Planner() {
     (error) => toast.showError(error)
   )
   const { isDark, toggleTheme } = useTheme()
+  const { tags: allTags } = useTags()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [defaultDate, setDefaultDate] = useState<string>('')
   const [filterPriority, setFilterPriority] = useState<'all' | 'low' | 'medium' | 'high'>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed'>('all')
+  const [filterTag, setFilterTag] = useState<string | null>(null)
   const [showCompleted, setShowCompleted] = useState(true)
   const [showTodayOnly, setShowTodayOnly] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
@@ -181,7 +184,7 @@ export default function Planner() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [focusMode, isModalOpen, showShortcuts, statsOpen, weekStart, toggleTheme, handleAddTask, goToToday])
 
-  const handleSaveTask = async (taskData: Partial<Task>, subtasks: Partial<Subtask>[] = []) => {
+  const handleSaveTask = async (taskData: Partial<Task>, subtasks: Partial<Subtask>[] = [], tags: Tag[] = []) => {
     try {
       if (editingTask) {
         const result = await updateTask(editingTask.id, taskData)
@@ -226,6 +229,14 @@ export default function Planner() {
           }
         }
         
+        // Handle tags - delete all and recreate
+        await supabase.from('task_tags').delete().eq('task_id', editingTask.id)
+        if (tags.length > 0) {
+          await supabase.from('task_tags').insert(
+            tags.map(tag => ({ task_id: editingTask.id, tag_id: tag.id }))
+          )
+        }
+        
         toast.showSuccess('Task updated successfully')
       } else {
         const result = await createTask({
@@ -257,6 +268,13 @@ export default function Planner() {
                 order_index: subtask.order_index || 0
               }])
           }
+        }
+        
+        // Create task tags
+        if (result.data && tags.length > 0) {
+          await supabase.from('task_tags').insert(
+            tags.map(tag => ({ task_id: result.data.id, tag_id: tag.id }))
+          )
         }
         
         toast.showSuccess('Task created successfully')
@@ -300,13 +318,18 @@ export default function Planner() {
       filtered = filtered.filter(t => t.priority === filterPriority)
     }
 
+    // Filter by tag
+    if (filterTag) {
+      filtered = filtered.filter(t => t.tags?.some(tag => tag.id === filterTag))
+    }
+
     // Filter by today
     if (showTodayOnly) {
       filtered = filtered.filter(t => isToday(parseISO(t.date)))
     }
 
     return filtered
-  }, [showCompleted, filterStatus, filterPriority, showTodayOnly])
+  }, [showCompleted, filterStatus, filterPriority, filterTag, showTodayOnly])
 
   // Memoize filtered tasks to avoid recomputing on every render
   const filteredTasks = useMemo(() => {
@@ -486,6 +509,7 @@ export default function Planner() {
               onClick={() => {
                 setFilterPriority('all')
                 setFilterStatus('all')
+                setFilterTag(null)
                 setShowTodayOnly(false)
                 setShowCompleted(true)
                 setSearchQuery('')
@@ -556,6 +580,24 @@ export default function Planner() {
             >
               {showCompleted ? 'Hide Completed' : 'Show Completed'}
             </button>
+            
+            {/* Tag Filter */}
+            {allTags.length > 0 && (
+              <select
+                value={filterTag || ''}
+                onChange={(e) => setFilterTag(e.target.value || null)}
+                className="px-3 py-1.5 text-xs rounded bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700
+                         text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all"
+                aria-label="Filter by tag"
+              >
+                <option value="">All Tags</option>
+                {allTags.map(tag => (
+                  <option key={tag.id} value={tag.id}>
+                    {tag.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           
           <div className="text-xs text-gray-500">

@@ -15,7 +15,10 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
     try {
       let query = supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          task_tags(tag_id, tags(*))
+        `)
         .order('order_index', { ascending: true })
 
       // If searching, get all tasks, otherwise filter by week
@@ -26,7 +29,14 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
       const { data, error } = await query
 
       if (error) throw error
-      setTasks(data || [])
+      
+      // Transform the data to include tags directly on the task
+      const tasksWithTags = (data || []).map((task: any) => ({
+        ...task,
+        tags: task.task_tags?.map((tt: any) => tt.tags).filter(Boolean) || []
+      }))
+      
+      setTasks(tasksWithTags || [])
     } catch (error) {
       console.error('Error fetching tasks:', error)
       onError?.('Failed to load tasks. Please refresh the page.')

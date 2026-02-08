@@ -12,7 +12,20 @@ export interface Task {
   recurrence_parent_id?: string | null
   created_at: string
   priority?: 'low' | 'medium' | 'high'
-  tags?: string[]
+  tags?: Tag[]
+}
+
+export interface Tag {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  created_at: string
+}
+
+export interface TaskTag {
+  task_id: string
+  tag_id: string
 }
 
 export interface Subtask {

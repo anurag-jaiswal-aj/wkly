@@ -1,13 +1,15 @@
 import { useState, FormEvent, useEffect } from 'react'
-import { Task, Subtask } from '@/types'
+import { Task, Subtask, Tag } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DEFAULT_TEMPLATES, TaskTemplate } from '@/data/templates'
 import { parseNaturalLanguage } from '@/utils/naturalLanguageParser'
+import { useTags } from '@/hooks/useTags'
+import TagPicker from './TagPicker'
 
 interface TaskModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (task: Partial<Task>, subtasks?: Partial<Subtask>[]) => Promise<void>
+  onSave: (task: Partial<Task>, subtasks?: Partial<Subtask>[], tags?: Tag[]) => Promise<void>
   task?: Task | null
   defaultDate?: string
   existingSubtasks?: Subtask[]
@@ -23,32 +25,47 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
   const [showTemplates, setShowTemplates] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([])
+  
+  const { tags, createTag, getTaskTags } = useTags()
 
   useEffect(() => {
-    if (task) {
-      setTitle(task.title)
-      setDescription(task.description || '')
-      setDate(task.date)
-      setPriority(task.priority)
-      setRecurrence(task.recurrence || 'none')
-      setSubtasks(existingSubtasks)
-    } else if (defaultDate) {
-      setTitle('')
-      setDescription('')
-      setDate(defaultDate)
-      setPriority(undefined)
-      setRecurrence('none')
-      setSubtasks([])
-    } else {
-      setTitle('')
-      setDescription('')
-      setDate(new Date().toISOString().split('T')[0])
-      setPriority(undefined)
-      setRecurrence('none')
-      setSubtasks([])
+    const loadData = async () => {
+      if (task) {
+        setTitle(task.title)
+        setDescription(task.description || '')
+        setDate(task.date)
+        setPriority(task.priority)
+        setRecurrence(task.recurrence || 'none')
+        setSubtasks(existingSubtasks)
+        
+        // Load task tags
+        const taskTags = await getTaskTags(task.id)
+        setSelectedTags(taskTags)
+      } else if (defaultDate) {
+        setTitle('')
+        setDescription('')
+        setDate(defaultDate)
+        setPriority(undefined)
+        setRecurrence('none')
+        setSubtasks([])
+        setSelectedTags([])
+      } else {
+        setTitle('')
+        setDescription('')
+        setDate(new Date().toISOString().split('T')[0])
+        setPriority(undefined)
+        setRecurrence('none')
+        setSubtasks([])
+        setSelectedTags([])
+      }
+      setNewSubtaskTitle('')
     }
-    setNewSubtaskTitle('')
-  }, [task, defaultDate, isOpen, existingSubtasks])
+    
+    if (isOpen) {
+      loadData()
+    }
+  }, [task, defaultDate, isOpen, existingSubtasks, getTaskTags])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -66,7 +83,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
         priority: priority,
         recurrence: recurrence === 'none' ? null : recurrence,
         recurrence_parent_id: task?.recurrence_parent_id || null,
-      }, subtasks)
+      }, subtasks, selectedTags)
 
       handleClose()
     } finally {
@@ -327,6 +344,20 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                 </p>
               )}
             </div>
+
+            {/* Tags */}
+            <TagPicker
+              selectedTags={selectedTags}
+              availableTags={tags}
+              onTagAdd={(tag) => setSelectedTags(prev => [...prev, tag])}
+              onTagRemove={(tagId) => setSelectedTags(prev => prev.filter(t => t.id !== tagId))}
+              onTagCreate={async (name, color) => {
+                const result = await createTag(name, color)
+                if (result.data) {
+                  setSelectedTags(prev => [...prev, result.data])
+                }
+              }}
+            />
 
             <div>
               <label className="block text-sm font-medium mb-2">
