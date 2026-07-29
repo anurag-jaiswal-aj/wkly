@@ -5,6 +5,9 @@ test.skip(!process.env.RUN_E2E, 'RUN_E2E environment variable not set')
 
 test.describe('App smoke tests', () => {
   test('loads planner and opens TagPicker', async ({ page }) => {
+    const creds = await (await import('./utils')).createAndSignInTestUser(page)
+    if (!creds) test.skip()
+
     await page.goto('/planner')
     await expect(page).toHaveTitle(/Wkly/)
 
@@ -25,7 +28,7 @@ test.describe('App smoke tests', () => {
     if (await addButton.count() > 0) {
       await addButton.click()
     } else {
-      const quick = page.locator('input[placeholder*="Type naturally"]')
+      const quick = page.getByPlaceholder(/Type naturally/i)
       await quick.fill('E2E test task tomorrow at 9am')
       await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
     }

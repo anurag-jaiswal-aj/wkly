@@ -12,7 +12,7 @@ test.describe('Drag and drop', () => {
     if (await addButton.count() > 0) {
       await addButton.click()
     } else {
-      const quick = page.locator('input[placeholder*="Type naturally"]')
+      const quick = page.getByPlaceholder(/Type naturally/i)
       await quick.fill('dnd-task-a tomorrow')
       await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
     }
@@ -27,7 +27,7 @@ test.describe('Drag and drop', () => {
     if (await addButton.count() > 0) {
       await addButton.click()
     } else {
-      const quick = page.locator('input[placeholder*="Type naturally"]')
+      const quick = page.getByPlaceholder(/Type naturally/i)
       await quick.fill('dnd-task-b tomorrow')
       await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
     }
