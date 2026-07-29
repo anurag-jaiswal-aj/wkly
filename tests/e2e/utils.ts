@@ -31,3 +31,29 @@ export async function createAndSignInTestUser(page: Page) {
 
   return { email, password }
 }
+
+export async function createTaskQuickAdd(page: Page, text: string) {
+  // Wait for quick add input to appear
+  const quick = await page.waitForSelector('input[placeholder*="Type naturally"]', { timeout: 5000 }).catch(() => null)
+  if (quick) {
+    await page.getByPlaceholder(/Type naturally/i).fill(text)
+    // Try clicking quick add button
+    const addBtn = page.getByRole('button', { name: /add_circle|Add/i }).first()
+    await addBtn.click().catch(() => {})
+    return true
+  }
+
+  // Fallback: try to click a day "Add task" button
+  const addButton = page.getByRole('button', { name: /Add task/i }).first()
+  if ((await addButton.count()) > 0) {
+    await addButton.click()
+    const titleInput = await page.waitForSelector('input[placeholder*="Team meeting"]', { timeout: 5000 }).catch(() => null)
+    if (titleInput) {
+      await titleInput.fill(text)
+      await page.getByRole('button', { name: /Create|Save/i }).last().click().catch(() => {})
+      return true
+    }
+  }
+
+  return false
+}
