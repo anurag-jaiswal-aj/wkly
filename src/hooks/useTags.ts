@@ -16,7 +16,7 @@ export function useTags() {
 
       if (error) throw error
       setTags(data || [])
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching tags:', error)
       setTags([])
     } finally {
@@ -40,7 +40,7 @@ export function useTags() {
       
       setTags(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating tag:', error)
       return { data: null, error }
     }
@@ -59,7 +59,7 @@ export function useTags() {
       
       setTags(prev => prev.map(tag => tag.id === id ? data : tag).sort((a, b) => a.name.localeCompare(b.name)))
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating tag:', error)
       return { data: null, error }
     }
@@ -76,7 +76,7 @@ export function useTags() {
       
       setTags(prev => prev.filter(tag => tag.id !== id))
       return { error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting tag:', error)
       return { error }
     }
@@ -90,7 +90,7 @@ export function useTags() {
 
       if (error) throw error
       return { error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding tag to task:', error)
       return { error }
     }
@@ -106,7 +106,7 @@ export function useTags() {
 
       if (error) throw error
       return { error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error removing tag from task:', error)
       return { error }
     }
@@ -120,7 +120,8 @@ export function useTags() {
         .eq('task_id', taskId)
 
       if (error) throw error
-      return data?.map(item => item.tags as any as Tag) || []
+      const rows = (data as unknown as Array<{ tags?: Tag }>) || []
+      return rows.map(r => r.tags as Tag).filter(Boolean)
     } catch (error) {
       console.error('Error fetching task tags:', error)
       return []

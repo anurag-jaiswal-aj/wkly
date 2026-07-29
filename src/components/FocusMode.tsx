@@ -7,12 +7,11 @@ interface FocusModeProps {
   tasks: Task[]
   onClose: () => void
   onToggle: (taskId: string) => void
-  onEdit: (task: Task) => void
 }
 
 type TimerMode = 'work' | 'break'
 
-export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusModeProps) {
+export default function FocusMode({ tasks, onClose, onToggle }: FocusModeProps) {
   // Filter only today's tasks
   const todayTasks = tasks.filter(task => isToday(parseISO(task.date)))
   const pendingTasks = todayTasks.filter(t => !t.completed)
@@ -28,7 +27,7 @@ export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusMod
   const breakDuration = 5 * 60
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
+    let interval: ReturnType<typeof setInterval> | null = null
 
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
@@ -52,11 +51,15 @@ export default function FocusMode({ tasks, onClose, onToggle, onEdit }: FocusMod
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isRunning, timeLeft, timerMode])
+  }, [isRunning, timeLeft, timerMode, breakDuration, workDuration])
 
   const playSound = () => {
     // Simple beep using Web Audio API
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    type WindowWithWebkit = Window & { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }
+    const win = window as WindowWithWebkit
+    const AudioCtor = win.AudioContext || win.webkitAudioContext
+    if (!AudioCtor) return
+    const audioContext = new AudioCtor()
     const oscillator = audioContext.createOscillator()
     const gainNode = audioContext.createGain()
 

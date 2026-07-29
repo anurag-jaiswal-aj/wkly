@@ -144,6 +144,9 @@ export default function DayView({
 
   const hours = Array.from({ length: 24 }, (_, i) => i)
 
+  // Droppable for untimed area
+  const { setNodeRef: setUntimedNodeRef } = useDroppable({ id: dateStr })
+
   const goToPreviousDay = () => {
     onDateChange(subDays(currentDate, 1))
   }
@@ -273,15 +276,7 @@ export default function DayView({
                 <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
                   Untimed Tasks
                 </h3>
-                <div
-                  ref={(el) => {
-                    if (el) {
-                      const { setNodeRef } = useDroppable({ id: dateStr })
-                      setNodeRef(el)
-                    }
-                  }}
-                  className="space-y-2"
-                >
+                <div ref={setUntimedNodeRef} className="space-y-2">
                   {untimedTasks.map(task => (
                     <TaskCard
                       key={task.id}

@@ -20,7 +20,7 @@ export function useAuth() {
         setUser(session?.user ?? null)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch(() => {
         setError('Unable to connect to authentication service')
         setLoading(false)
       })
@@ -38,7 +38,7 @@ export function useAuth() {
     if (!isSupabaseConfigured) {
       return { 
         data: null, 
-        error: { message: 'Supabase is not configured. Please see SUPABASE_SETUP.md for setup instructions.' } as any 
+        error: { message: 'Supabase is not configured. Please see SUPABASE_SETUP.md for setup instructions.' } as { message: string } 
       }
     }
     try {
@@ -47,8 +47,8 @@ export function useAuth() {
         password,
       })
       return { data, error }
-    } catch (err) {
-      return { data: null, error: { message: 'Unable to connect to authentication service' } as any }
+    } catch {
+      return { data: null, error: { message: 'Unable to connect to authentication service' } as { message: string } }
     }
   }
 
@@ -56,7 +56,7 @@ export function useAuth() {
     if (!isSupabaseConfigured) {
       return { 
         data: null, 
-        error: { message: 'Supabase is not configured. Please see SUPABASE_SETUP.md for setup instructions.' } as any 
+        error: { message: 'Supabase is not configured. Please see SUPABASE_SETUP.md for setup instructions.' } as { message: string } 
       }
     }
     try {
@@ -65,8 +65,8 @@ export function useAuth() {
         password,
       })
       return { data, error }
-    } catch (err) {
-      return { data: null, error: { message: 'Unable to connect to authentication service' } as any }
+    } catch {
+      return { data: null, error: { message: 'Unable to connect to authentication service' } as { message: string } }
     }
   }
 
@@ -74,8 +74,8 @@ export function useAuth() {
     try {
       const { error } = await supabase.auth.signOut()
       return { error }
-    } catch (err) {
-      return { error: { message: 'Unable to sign out' } as any }
+    } catch {
+      return { error: { message: 'Unable to sign out' } as { message: string } }
     }
   }
 

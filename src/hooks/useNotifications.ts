@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Task } from '@/types'
-import { parseISO, isPast, isToday, format } from 'date-fns'
+import { parseISO, isToday, format } from 'date-fns'
 
 export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default')

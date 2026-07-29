@@ -7,8 +7,8 @@ interface TaskHistoryEntry {
   task_id: string
   action: 'created' | 'updated' | 'completed' | 'uncompleted' | 'deleted'
   field_changed?: string
-  old_value?: any
-  new_value?: any
+  old_value?: unknown
+  new_value?: unknown
   created_at: string
   user_id: string
 }
@@ -30,53 +30,48 @@ export default function TaskHistoryModal({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (isOpen && taskId) {
-      fetchHistory()
-    }
+    if (!(isOpen && taskId)) return
+
+    let mounted = true
+    ;(async () => {
+      setLoading(true)
+
+      // Mock data for demo
+      const mockHistory: TaskHistoryEntry[] = [
+        {
+          id: '1',
+          task_id: taskId,
+          action: 'completed',
+          created_at: new Date().toISOString(),
+          user_id: 'user1',
+        },
+        {
+          id: '2',
+          task_id: taskId,
+          action: 'updated',
+          field_changed: 'priority',
+          old_value: 'low',
+          new_value: 'high',
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+          user_id: 'user1',
+        },
+        {
+          id: '3',
+          task_id: taskId,
+          action: 'created',
+          created_at: new Date(Date.now() - 7200000).toISOString(),
+          user_id: 'user1',
+        },
+      ]
+
+      if (mounted) setHistory(mockHistory)
+      if (mounted) setLoading(false)
+    })()
+
+    return () => { mounted = false }
   }, [isOpen, taskId])
 
-  const fetchHistory = async () => {
-    setLoading(true)
-    // In a real implementation, fetch from Supabase
-    // const { data } = await supabase
-    //   .from('task_history')
-    //   .select('*')
-    //   .eq('task_id', taskId)
-    //   .order('created_at', { ascending: false })
-    
-    // Mock data for demo
-    const mockHistory: TaskHistoryEntry[] = [
-      {
-        id: '1',
-        task_id: taskId,
-        action: 'completed',
-        created_at: new Date().toISOString(),
-        user_id: 'user1',
-      },
-      {
-        id: '2',
-        task_id: taskId,
-        action: 'updated',
-        field_changed: 'priority',
-        old_value: 'low',
-        new_value: 'high',
-        created_at: new Date(Date.now() - 3600000).toISOString(),
-        user_id: 'user1',
-      },
-      {
-        id: '3',
-        task_id: taskId,
-        action: 'created',
-        created_at: new Date(Date.now() - 7200000).toISOString(),
-        user_id: 'user1',
-      },
-    ]
-    
-    setHistory(mockHistory)
-    setLoading(false)
-  }
-
-  const getActionIcon = (action: string) => {
+  const getActionIcon = (action: TaskHistoryEntry['action']) => {
     switch (action) {
       case 'created':
         return 'add_circle'

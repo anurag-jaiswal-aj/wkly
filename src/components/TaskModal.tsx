@@ -330,7 +330,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
               </label>
               <select
                 value={recurrence}
-                onChange={(e) => setRecurrence(e.target.value as any)}
+                onChange={(e) => setRecurrence(e.target.value as 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly')}
                 className="input-base"
               >
                 <option value="none">Does not repeat</option>

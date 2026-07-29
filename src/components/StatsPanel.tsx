@@ -8,7 +8,7 @@ import {
   parseISO, 
   isSameDay,
   startOfDay,
-  differenceInDays
+  
 } from 'date-fns'
 
 interface StatsPanelProps {
@@ -55,8 +55,8 @@ export default function StatsPanel({ tasks, weekStart, isOpen, onToggle }: Stats
     const today = startOfDay(new Date())
     let currentDate = today
 
-    // Check backwards from today
-    while (true) {
+    // Check backwards from today (limit to 365 days)
+    while (streak <= 365) {
       const dayTasks = tasks.filter(t => {
         const taskDate = startOfDay(parseISO(t.date))
         return isSameDay(taskDate, currentDate) && t.completed
@@ -69,9 +69,6 @@ export default function StatsPanel({ tasks, weekStart, isOpen, onToggle }: Stats
       streak++
       currentDate = new Date(currentDate)
       currentDate.setDate(currentDate.getDate() - 1)
-
-      // Limit to reasonable streak length
-      if (streak > 365) break
     }
 
     return streak
