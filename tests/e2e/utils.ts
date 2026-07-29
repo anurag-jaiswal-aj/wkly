@@ -9,12 +9,16 @@ export async function createAndSignInTestUser(page: Page) {
   const email = `e2e+${Date.now()}@example.com`
   const password = 'Test1234!'
 
+  // Sanitize keys (remove quotes/newlines) to avoid invalid header values
+  const cleanAnon = String(anonKey).trim().replace(/^"|"$/g, '').split(/\s+/)[0]
+  const cleanUrl = String(supabaseUrl).trim()
+
   // Create user via Supabase Auth REST
-  await fetch(`${supabaseUrl}/auth/v1/signup`, {
+  await fetch(`${cleanUrl}/auth/v1/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      apikey: anonKey,
+      apikey: cleanAnon,
     },
     body: JSON.stringify({ email, password }),
   })
