@@ -15,6 +15,9 @@ test.describe('App smoke tests', () => {
   })
 
   test('create task and add tag', async ({ page }) => {
+    const creds = await (await import('./utils')).createAndSignInTestUser(page)
+    if (!creds) test.skip()
+
     await page.goto('/planner')
 
     // Try to click the first "Add task" button; fallback to QuickAdd input

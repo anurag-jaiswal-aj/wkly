@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Drag and drop', () => {
   test('reorders two tasks', async ({ page }) => {
+    const creds = await (await import('./utils')).createAndSignInTestUser(page)
+    if (!creds) test.skip()
+
     await page.goto('/planner')
 
     // Create first task
