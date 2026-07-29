@@ -5,17 +5,33 @@ test.describe('Drag and drop', () => {
     await page.goto('/planner')
 
     // Create first task
-    const addButtons = page.locator('button:has-text("+ Add task")')
-    await addButtons.first().click()
+    const addButton = page.getByRole('button', { name: /Add task/i }).first()
+    if (await addButton.count() > 0) {
+      await addButton.click()
+    } else {
+      const quick = page.locator('input[placeholder*="Type naturally"]')
+      await quick.fill('dnd-task-a tomorrow')
+      await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
+    }
     const titleInput = page.locator('input[placeholder*="Team meeting"]')
-    await titleInput.fill('dnd-task-a')
-    await page.locator('button:has-text("Create")').last().click()
+    if (await titleInput.count() > 0) {
+      await titleInput.fill('dnd-task-a')
+      await page.getByRole('button', { name: /Create|Save/i }).last().click()
+    }
     await expect(page.locator('text=dnd-task-a')).toBeVisible()
 
     // Create second task
-    await addButtons.first().click()
-    await titleInput.fill('dnd-task-b')
-    await page.locator('button:has-text("Create")').last().click()
+    if (await addButton.count() > 0) {
+      await addButton.click()
+    } else {
+      const quick = page.locator('input[placeholder*="Type naturally"]')
+      await quick.fill('dnd-task-b tomorrow')
+      await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
+    }
+    if (await titleInput.count() > 0) {
+      await titleInput.fill('dnd-task-b')
+      await page.getByRole('button', { name: /Create|Save/i }).last().click()
+    }
     await expect(page.locator('text=dnd-task-b')).toBeVisible()
 
     // Locate cards
