@@ -23,22 +23,9 @@ test.describe('App smoke tests', () => {
 
     await page.goto('/planner')
 
-    // Try to click the first "Add task" button; fallback to QuickAdd input
-    const addButton = page.getByRole('button', { name: /Add task/i }).first()
-    if (await addButton.count() > 0) {
-      await addButton.click()
-    } else {
-      const quick = page.getByPlaceholder(/Type naturally/i)
-      await quick.fill('E2E test task tomorrow at 9am')
-      await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
-    }
-
-    // Fill title and save if modal open
-    const titleInput = page.locator('input[placeholder*="Team meeting"]')
-    if (await titleInput.count() > 0) {
-      await titleInput.fill('E2E test task')
-      await page.getByRole('button', { name: /Create|Save/i }).last().click()
-    }
+    // Create task using helper
+    const created = await (await import('./utils')).createTaskQuickAdd(page, 'E2E test task')
+    if (!created) throw new Error('Failed to create task via QuickAdd or Add Task modal')
 
     // Wait for creation notification
     await expect(page.locator('text=Task created')).toBeVisible({ timeout: 5000 })

@@ -9,32 +9,13 @@ test.describe('Drag and drop', () => {
 
     // Create first task
     const addButton = page.getByRole('button', { name: /Add task/i }).first()
-    if (await addButton.count() > 0) {
-      await addButton.click()
-    } else {
-      const quick = page.getByPlaceholder(/Type naturally/i)
-      await quick.fill('dnd-task-a tomorrow')
-      await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
-    }
-    const titleInput = page.locator('input[placeholder*="Team meeting"]')
-    if (await titleInput.count() > 0) {
-      await titleInput.fill('dnd-task-a')
-      await page.getByRole('button', { name: /Create|Save/i }).last().click()
-    }
+    const createdA = await (await import('./utils')).createTaskQuickAdd(page, 'dnd-task-a')
+    if (!createdA) throw new Error('Failed to create dnd-task-a')
     await expect(page.locator('text=dnd-task-a')).toBeVisible()
 
     // Create second task
-    if (await addButton.count() > 0) {
-      await addButton.click()
-    } else {
-      const quick = page.getByPlaceholder(/Type naturally/i)
-      await quick.fill('dnd-task-b tomorrow')
-      await page.getByRole('button', { name: /add_circle|Add/i }).first().click().catch(() => {})
-    }
-    if (await titleInput.count() > 0) {
-      await titleInput.fill('dnd-task-b')
-      await page.getByRole('button', { name: /Create|Save/i }).last().click()
-    }
+    const createdB = await (await import('./utils')).createTaskQuickAdd(page, 'dnd-task-b')
+    if (!createdB) throw new Error('Failed to create dnd-task-b')
     await expect(page.locator('text=dnd-task-b')).toBeVisible()
 
     // Locate cards
