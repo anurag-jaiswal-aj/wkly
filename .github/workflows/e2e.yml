@@ -32,4 +32,6 @@ jobs:
           npx wait-on http://localhost:5174
 
       - name: Run Playwright tests
+        env:
+          RUN_E2E: '1'
         run: npx playwright test --reporter=github
