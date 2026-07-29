@@ -24,6 +24,7 @@ test.describe('App smoke tests', () => {
     await page.goto('/planner')
 
     // Create task using helper
+    await (await import('./utils')).dismissOverlays(page)
     const created = await (await import('./utils')).createTaskQuickAdd(page, 'E2E test task')
     if (!created) throw new Error('Failed to create task via QuickAdd or Add Task modal')
 

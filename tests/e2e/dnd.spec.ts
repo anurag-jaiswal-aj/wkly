@@ -9,6 +9,7 @@ test.describe('Drag and drop', () => {
 
     // Create first task
     const addButton = page.getByRole('button', { name: /Add task/i }).first()
+    await (await import('./utils')).dismissOverlays(page)
     const createdA = await (await import('./utils')).createTaskQuickAdd(page, 'dnd-task-a')
     if (!createdA) throw new Error('Failed to create dnd-task-a')
     await expect(page.locator('text=dnd-task-a')).toBeVisible()
