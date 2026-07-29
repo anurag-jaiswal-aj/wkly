@@ -33,6 +33,9 @@ export async function createAndSignInTestUser(page: Page) {
 }
 
 export async function createTaskQuickAdd(page: Page, text: string) {
+  // Ensure planner is ready
+  await page.waitForSelector('text=Task planner', { timeout: 5000 }).catch(() => null)
+
   // Wait for quick add input to appear
   const quick = await page.waitForSelector('input[placeholder*="Type naturally"]', { timeout: 5000 }).catch(() => null)
   if (quick) {
@@ -56,4 +59,27 @@ export async function createTaskQuickAdd(page: Page, text: string) {
   }
 
   return false
+}
+
+export async function dismissOverlays(page: Page) {
+  // Common overlay selectors/buttons to close tours, modals, or notifications
+  const closeSelectors = [
+    'button:has-text("Skip tour")',
+    'button:has-text("Dismiss")',
+    'button:has-text("Close")',
+    'button:has-text("Got it")',
+    'button[aria-label="Close dialog"]',
+    '.tour-close',
+  ]
+
+  for (const sel of closeSelectors) {
+    const el = await page.$(sel)
+    if (el) {
+      try { await el.click() } catch {}
+    }
+  }
+
+  // Dismiss any notifications 'Dismiss notification' button
+  const notif = await page.$('button:has-text("Dismiss notification")')
+  if (notif) try { await notif.click() } catch {}
 }
