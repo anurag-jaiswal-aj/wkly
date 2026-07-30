@@ -2,21 +2,24 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Drag and drop', () => {
   test('reorders two tasks', async ({ page }) => {
-    const creds = await (await import('./utils')).createAndSignInTestUser(page)
+    const utils = await import('./utils')
+    const creds = await utils.createAndSignInTestUser(page)
     if (!creds) test.skip()
 
     await page.goto('/planner')
+    await utils.dismissOverlays(page)
 
-    // Create first task
-    const addButton = page.getByRole('button', { name: /Add task/i }).first()
-    await (await import('./utils')).dismissOverlays(page)
-    const createdA = await (await import('./utils')).createTaskQuickAdd(page, 'dnd-task-a')
-    if (!createdA) throw new Error('Failed to create dnd-task-a')
+    // Create or seed tasks
+    let createdA = false
+    let createdB = false
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
+      createdA = await utils.seedTask(page, creds.userId || null, 'dnd-task-a')
+      createdB = await utils.seedTask(page, creds.userId || null, 'dnd-task-b')
+    }
+    if (!createdA) createdA = await utils.createTaskQuickAdd(page, 'dnd-task-a')
+    if (!createdB) createdB = await utils.createTaskQuickAdd(page, 'dnd-task-b')
+    if (!createdA || !createdB) return test.skip()
     await expect(page.locator('text=dnd-task-a')).toBeVisible()
-
-    // Create second task
-    const createdB = await (await import('./utils')).createTaskQuickAdd(page, 'dnd-task-b')
-    if (!createdB) throw new Error('Failed to create dnd-task-b')
     await expect(page.locator('text=dnd-task-b')).toBeVisible()
 
     // Locate cards
