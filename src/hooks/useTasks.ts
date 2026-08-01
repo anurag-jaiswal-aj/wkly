@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Task } from '@/types'
+import { Task, Tag } from '@/types'
 import { startOfWeek, endOfWeek, format } from 'date-fns'
 
 export function useTasks(weekStart: Date, searchQuery?: string, onError?: (message: string) => void) {
@@ -34,11 +34,12 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
       }
       
       // Transform the data to include tags directly on the task
-      const tasksWithTags = (data || []).map((task: any) => ({
+      const rows = (data as unknown as Array<Task & { task_tags?: Array<{ tags?: Tag }>}>) || []
+      const tasksWithTags = rows.map((task) => ({
         ...task,
-        tags: task.task_tags?.map((tt: any) => tt.tags).filter(Boolean) || []
+        tags: (task.task_tags || []).map(tt => tt.tags as Tag).filter(Boolean)
       }))
-      
+
       setTasks(tasksWithTags || [])
     } catch (error) {
       console.error('Error fetching tasks:', error)
@@ -78,7 +79,7 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
 
     // Clean task object - remove undefined values
     const cleanTask = Object.fromEntries(
-      Object.entries({ ...task, user_id: user.id }).filter(([_, v]) => v !== undefined)
+      Object.entries({ ...task, user_id: user.id }).filter(([, v]) => v !== undefined)
     )
 
     const { data, error } = await supabase

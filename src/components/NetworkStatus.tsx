@@ -2,19 +2,11 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function NetworkStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [showOffline, setShowOffline] = useState(false)
+  const [showOffline, setShowOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true)
-      setShowOffline(false)
-    }
-
-    const handleOffline = () => {
-      setIsOnline(false)
-      setShowOffline(true)
-    }
+    const handleOnline = () => setShowOffline(false)
+    const handleOffline = () => setShowOffline(true)
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)

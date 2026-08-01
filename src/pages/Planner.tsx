@@ -93,6 +93,8 @@ export default function Planner() {
   }, [debouncedSearchQuery])
 
   const handleAddTask = useCallback((date: string, time?: string) => {
+    // consume `time` to avoid unused-var lint complaints; may be used in future
+    void time
     setEditingTask(null)
     setDefaultDate(date)
     setTaskSubtasks([])
@@ -240,7 +242,7 @@ export default function Planner() {
         toast.showSuccess('Task updated successfully')
       } else {
         // Only include defined fields to handle missing database columns gracefully
-        const taskToCreate: any = {
+        const taskToCreate: Record<string, unknown> = {
           title: taskData.title!,
           description: taskData.description || null,
           date: taskData.date!,
@@ -254,7 +256,7 @@ export default function Planner() {
         if (taskData.priority) taskToCreate.priority = taskData.priority
         if (taskData.reminder_time) taskToCreate.reminder_time = taskData.reminder_time
         
-        const result = await createTask(taskToCreate)
+        const result = await createTask(taskToCreate as Omit<Task, 'id' | 'user_id' | 'created_at'>)
         
         if (result.error) {
           toast.showError('Failed to create task')
@@ -719,7 +721,6 @@ export default function Planner() {
             tasks={tasks}
             onClose={() => setFocusMode(false)}
             onToggle={(taskId) => toggleTaskComplete(taskId, tasks.find(t => t.id === taskId)?.completed || false)}
-            onEdit={handleTaskEdit}
           />
         </Suspense>
       )}

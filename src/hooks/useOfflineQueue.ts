@@ -4,7 +4,7 @@ interface OfflineQueueItem {
   id: string
   action: 'create' | 'update' | 'delete'
   table: string
-  data: any
+  data: unknown
   timestamp: number
 }
 
@@ -48,21 +48,6 @@ export function useOfflineQueue() {
   }, [])
 
   // Auto-sync when coming back online
-  useEffect(() => {
-    if (isOnline && queue.length > 0 && !isSyncing) {
-      syncQueue()
-    }
-  }, [isOnline, queue.length, isSyncing])
-
-  const addToQueue = useCallback((item: Omit<OfflineQueueItem, 'id' | 'timestamp'>) => {
-    const newItem: OfflineQueueItem = {
-      ...item,
-      id: `${Date.now()}_${Math.random()}`,
-      timestamp: Date.now(),
-    }
-    setQueue(prev => [...prev, newItem])
-  }, [])
-
   const syncQueue = useCallback(async () => {
     if (queue.length === 0 || isSyncing) return
 
@@ -83,6 +68,22 @@ export function useOfflineQueue() {
       setIsSyncing(false)
     }
   }, [queue, isSyncing])
+
+  useEffect(() => {
+    if (isOnline && queue.length > 0 && !isSyncing) {
+      syncQueue()
+    }
+  }, [isOnline, queue.length, isSyncing, syncQueue])
+
+  const addToQueue = useCallback((item: Omit<OfflineQueueItem, 'id' | 'timestamp'>) => {
+    const newItem: OfflineQueueItem = {
+      ...item,
+      id: `${Date.now()}_${Math.random()}`,
+      timestamp: Date.now(),
+    }
+    setQueue(prev => [...prev, newItem])
+  }, [])
+
 
   const clearQueue = useCallback(() => {
     setQueue([])
