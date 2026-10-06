@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import { Page } from '@playwright/test'
 import fs from 'fs/promises'
 import path from 'path'
@@ -76,7 +75,7 @@ export async function createAndSignInTestUser(page: Page) {
               },
               body: JSON.stringify(body),
             }).catch(() => null)
-          } catch (e) {}
+          } catch { /* ignore */ }
         }
       }
 
@@ -100,7 +99,7 @@ export async function createAndSignInTestUser(page: Page) {
     })
     const tokenJson = await tokenResp.json().catch(() => null)
     if (tokenJson && tokenJson.access_token) tokenData = tokenJson
-  } catch (e) {}
+  } catch { /* ignore */ }
 
   // If we have a token and user, set localStorage directly
   if (tokenData && tokenData.access_token) {
@@ -113,7 +112,7 @@ export async function createAndSignInTestUser(page: Page) {
         })
         const userJson = await userResp.json().catch(() => null)
         if (userJson) tokenData.user = userJson
-      } catch {}
+      } catch { /* ignore */ }
     }
   }
 
@@ -132,11 +131,11 @@ export async function createAndSignInTestUser(page: Page) {
 
     await page.goto('/login')
     await page.evaluate(({ key, value }) => {
-      try { localStorage.setItem(key, value) } catch (e) {}
+      try { localStorage.setItem(key, value) } catch { /* ignore */ }
     }, { key: 'supabase.auth.token', value: JSON.stringify(tokenObj) })
     // Also set legacy key just in case
     await page.evaluate(({ key, value }) => {
-      try { localStorage.setItem(key, value) } catch (e) {}
+      try { localStorage.setItem(key, value) } catch { /* ignore */ }
     }, { key: 'sb:token', value: JSON.stringify(tokenObj) })
     // Reload so the app picks up the session from localStorage
     await page.reload()
@@ -149,9 +148,9 @@ export async function createAndSignInTestUser(page: Page) {
         const dir = path.join(process.cwd(), 'tests', 'e2e', 'artifacts')
         await fs.mkdir(dir, { recursive: true })
         await fs.writeFile(path.join(dir, `session-${Date.now()}.json`), String(stored || 'null'))
-      } catch (e) {}
+      } catch { /* ignore */ }
       console.debug('[E2E] stored session=', stored)
-    } catch (e) {}
+    } catch { /* ignore */ }
     const userId = tokenData.user?.id || data?.user?.id || null
     return { email, password, userId }
   }
@@ -190,7 +189,7 @@ export async function seedTask(page: Page, userId: string | null, title = 'E2E s
         body: JSON.stringify(body),
       })
       if (resp && (resp.status === 201 || resp.status === 200)) return true
-    } catch (e) {}
+    } catch { /* ignore */ }
   }
   return false
 }
@@ -198,7 +197,7 @@ export async function seedTask(page: Page, userId: string | null, title = 'E2E s
 export async function createTaskQuickAdd(page: Page, text: string) {
   // Ensure planner is ready
   // Ensure we have a desktop-sized viewport so header quick-add is visible
-  try { await page.setViewportSize({ width: 1400, height: 900 }) } catch {}
+  try { await page.setViewportSize({ width: 1400, height: 900 }) } catch { /* ignore */ }
   // Wait for the main content element; use aria-label rather than visible text
   await page.waitForSelector('main[aria-label="Task planner"]', { timeout: 7000 }).catch(() => null)
 
@@ -220,13 +219,13 @@ export async function createTaskQuickAdd(page: Page, text: string) {
         const submitBtn = await page.$('button[type="submit"]')
         console.debug('[E2E] createTaskQuickAdd: found submit button=', !!submitBtn)
         if (submitBtn) await submitBtn.click().catch(() => {})
-      } catch {}
+      } catch { /* ignore */ }
       // Try clicking the material icon add button if present
       try {
         const iconBtn = await page.$('button:has-text("add_circle")')
         console.debug('[E2E] createTaskQuickAdd: found icon add button=', !!iconBtn)
         if (iconBtn) await iconBtn.click().catch(() => {})
-      } catch {}
+      } catch { /* ignore */ }
       // Wait briefly for task to appear
       await page.waitForSelector(`text=${text}`, { timeout: 5000 }).catch(() => null)
       return true
@@ -264,7 +263,7 @@ export async function createTaskQuickAdd(page: Page, text: string) {
       await page.waitForSelector(`text=${text}`, { timeout: 5000 }).catch(() => null)
       return true
     }
-  } catch {}
+  } catch { /* ignore */ }
 
   // Final fallback: try any global Add buttons (floating action buttons, icons)
   const globalAdd = await page.$('button[aria-label*="add"], button[title*="Add"], button:has-text("+")')
@@ -275,18 +274,18 @@ export async function createTaskQuickAdd(page: Page, text: string) {
       await page.waitForTimeout(200)
       const anyInput = await page.$('input')
       if (anyInput) {
-        try { await anyInput.fill(text) } catch {}
+        try { await anyInput.fill(text) } catch { /* ignore */ }
         await page.keyboard.press('Enter').catch(() => {})
         await page.waitForSelector(`text=${text}`, { timeout: 5000 }).catch(() => null)
         return true
       }
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   // Capture debug artifacts to help diagnose why QuickAdd wasn't found
   try {
     await captureDebug(page, 'createTaskQuickAdd-failed')
-  } catch (e) {}
+  } catch { /* ignore */ }
   return false
 }
 
@@ -297,8 +296,8 @@ export async function captureDebug(page: Page, name = 'debug') {
     const ts = Date.now()
     const screenshotPath = path.join(dir, `${name}-${ts}.png`)
     const htmlPath = path.join(dir, `${name}-${ts}.html`)
-    try { await page.screenshot({ path: screenshotPath, fullPage: true }) } catch (e) {}
-    try { const html = await page.content(); await fs.writeFile(htmlPath, html) } catch (e) {}
+    try { await page.screenshot({ path: screenshotPath, fullPage: true }) } catch { /* ignore */ }
+    try { const html = await page.content(); await fs.writeFile(htmlPath, html) } catch { /* ignore */ }
     // Also dump console logs if available
     return { screenshotPath, htmlPath }
   } catch (e) {
@@ -320,11 +319,11 @@ export async function dismissOverlays(page: Page) {
   for (const sel of closeSelectors) {
     const el = await page.$(sel)
     if (el) {
-      try { await el.click() } catch {}
+      try { await el.click() } catch { /* ignore */ }
     }
   }
 
   // Dismiss any notifications 'Dismiss notification' button
   const notif = await page.$('button:has-text("Dismiss notification")')
-  if (notif) try { await notif.click() } catch {}
+  if (notif) try { await notif.click() } catch { /* ignore */ }
 }

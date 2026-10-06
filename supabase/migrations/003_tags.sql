@@ -66,6 +66,11 @@ CREATE POLICY "Users can create their own task_tags"
       WHERE tasks.id = task_tags.task_id
       AND tasks.user_id = auth.uid()
     )
+    AND EXISTS (
+      SELECT 1 FROM tags
+      WHERE tags.id = task_tags.tag_id
+      AND tags.user_id = auth.uid()
+    )
   );
 
 DROP POLICY IF EXISTS "Users can delete their own task_tags" ON task_tags;
