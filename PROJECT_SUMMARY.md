@@ -98,7 +98,7 @@ Grays: #111, #222, #333, #666, #999, #DDD, #EEE, #F5F5F5
 ## 📁 Project Structure
 
 ```
-wkyl/
+wkly/
 ├── src/
 │   ├── components/          # Reusable UI components
 │   │   ├── DayColumn.tsx    # Single day in week view

@@ -50,7 +50,7 @@ ERR_NAME_NOT_RESOLVED: https://qfntrwggpeptnsxvaoie.supabase.co
 
 ### Step 3: Update .env File
 
-1. Open `/Users/anurag/Developer/wkyl/.env`
+1. Open `/Users/anurag/Developer/wkly/.env`
 2. Replace the empty values:
 
 ```bash

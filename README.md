@@ -67,7 +67,7 @@ A modern, distraction-free weekly planner with a monochrome UI, built with React
 ### 1. Clone and Install
 
 ```bash
-cd wkyl
+cd wkly
 npm install
 ```
 
@@ -122,7 +122,7 @@ npm run preview
 ## 📁 Project Structure
 
 ```
-wkyl/
+wkly/
 ├── src/
 │   ├── components/
 │   │   ├── TaskCard.tsx       # Individual task display

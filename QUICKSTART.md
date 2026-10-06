@@ -14,7 +14,7 @@ If not installed, get Node.js from [nodejs.org](https://nodejs.org)
 ## Step 1: Install Dependencies (1 minute)
 
 ```bash
-cd /Users/anurag/Developer/wkyl
+cd /Users/anurag/Developer/wkly
 npm install
 ```
 
