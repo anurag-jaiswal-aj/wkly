@@ -30,9 +30,7 @@ test.describe('Drag and drop', () => {
     await firstCard.dragTo(secondCard)
 
     // Verify order: dnd-task-b appears before dnd-task-a
-    const titles = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.card .text-sm.font-medium')).map(el => el.textContent?.trim())
-    })
+    // Removed unused titles variable
     // Fallback simple check: ensure both exist
     expect(await page.locator('text=dnd-task-a').count()).toBeGreaterThan(0)
     expect(await page.locator('text=dnd-task-b').count()).toBeGreaterThan(0)

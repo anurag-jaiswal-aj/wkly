@@ -63,6 +63,7 @@ export default function QuickAddTask({ onCreateTask, defaultDate }: QuickAddTask
                      bg-white dark:bg-gray-900
                      transition-all"
             autoComplete="off"
+            aria-label="Quick add task"
           />
           <button
             type="submit"
@@ -71,6 +72,7 @@ export default function QuickAddTask({ onCreateTask, defaultDate }: QuickAddTask
                      text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300
                      disabled:text-gray-300 dark:disabled:text-gray-600
                      disabled:cursor-not-allowed transition-colors"
+            aria-label="Create task"
           >
             <span className="material-symbols-outlined">add_circle</span>
           </button>

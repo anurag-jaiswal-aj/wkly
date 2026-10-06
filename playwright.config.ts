@@ -12,5 +12,10 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } }
-  ]
+  ],
+  webServer: {
+    command: 'npm run dev -- --port 5174',
+    port: 5174,
+    reuseExistingServer: !process.env.CI,
+  }
 })

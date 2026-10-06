@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from 'react'
+import { useState, FormEvent, useEffect, useCallback } from 'react'
 import { Task, Subtask, Tag } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DEFAULT_TEMPLATES, TaskTemplate } from '@/data/templates'
@@ -92,14 +92,14 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
     }
   }
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (saving) return // Prevent closing while saving
     setTitle('')
     setDescription('')
     setSubtasks([])
     setNewSubtaskTitle('')
     onClose()
-  }
+  }, [saving, onClose])
 
   const addSubtask = () => {
     if (!newSubtaskTitle.trim()) return
@@ -144,6 +144,16 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
     ))
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !saving) {
+        handleClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, saving, handleClose])
+
   if (!isOpen) return null
 
   return (
@@ -163,9 +173,12 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', duration: 0.3 }}
           className="relative w-full max-w-md card p-6 z-10 max-h-[90vh] overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="task-modal-title"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-light">
+            <h2 id="task-modal-title" className="text-xl font-light">
               {task ? 'Edit Task' : 'New Task'}
             </h2>
             <div className="flex items-center gap-2">
@@ -380,6 +393,9 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                         <button
                           type="button"
                           onClick={() => toggleSubtask(index)}
+                          aria-label={`Toggle checklist item: ${subtask.title}`}
+                          aria-checked={subtask.completed}
+                          role="checkbox"
                           className="w-4 h-4 rounded border-2 border-gray-400 dark:border-gray-600 flex items-center justify-center flex-shrink-0 hover:border-gray-900 dark:hover:border-gray-100 transition-colors"
                         >
                           {subtask.completed && (
@@ -392,6 +408,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                         <button
                           type="button"
                           onClick={() => removeSubtask(index)}
+                          aria-label={`Remove checklist item: ${subtask.title}`}
                           className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex-shrink-0"
                         >
                           <span className="material-symbols-outlined text-base">close</span>
@@ -409,6 +426,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultDate, 
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
                   onKeyDown={handleSubtaskKeyDown}
+                  aria-label="New checklist item"
                   className="input-base flex-1"
                   placeholder="Add a checklist item... (Press Enter)"
                 />

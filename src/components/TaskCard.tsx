@@ -108,7 +108,11 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
           )}
         </button>
 
-        <div className="flex-1 min-w-0" onClick={() => onEdit(task)}>
+        <button
+          className="flex-1 min-w-0 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white rounded p-1 -m-1"
+          onClick={() => onEdit(task)}
+          aria-label={`Edit task: ${task.title}`}
+        >
           <div className="flex items-center gap-2 mb-1">
             <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
               {task.title}
@@ -169,7 +173,7 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
               </span>
             </div>
           )}
-        </div>
+        </button>
 
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
@@ -179,6 +183,7 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
             }}
             className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600
                        dark:hover:text-gray-300 transition-all"
+            aria-label="View history"
             title="View history"
           >
             <span className="material-symbols-outlined text-xl">history</span>
@@ -191,6 +196,8 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
             }}
             className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-900
                        dark:hover:text-gray-100 transition-all"
+            aria-label={`Delete task: ${task.title}`}
+            title="Delete task"
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
@@ -201,7 +208,10 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onToggle, onDelete, show
         <ConfirmDialog
           isOpen={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={() => onDelete(task.id)}
+          onConfirm={() => {
+            setShowDeleteConfirm(false)
+            onDelete(task.id)
+          }}
           title="Delete Task"
           message="Are you sure you want to delete this task? This action cannot be undone."
           confirmText="Delete"

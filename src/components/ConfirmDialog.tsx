@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -8,6 +9,7 @@ interface ConfirmDialogProps {
   message: string
   confirmText?: string
   cancelText?: string
+  isLoading?: boolean
 }
 
 export default function ConfirmDialog({
@@ -18,7 +20,26 @@ export default function ConfirmDialog({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  isLoading = false,
 }: ConfirmDialogProps) {
+  const cancelBtnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (isOpen && !isLoading) {
+      cancelBtnRef.current?.focus()
+    }
+  }, [isOpen, isLoading])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !isLoading) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isLoading, onClose])
+
   if (!isOpen) return null
 
   return (
@@ -48,24 +69,26 @@ export default function ConfirmDialog({
 
           <div className="flex gap-3">
             <button
+              ref={cancelBtnRef}
               onClick={onClose}
-              aria-label="Cancel"
+              disabled={isLoading}
               className="flex-1 px-4 py-2 rounded border border-gray-300 dark:border-gray-700 
-                       hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm"
+                       hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cancelText}
             </button>
             <button
               onClick={() => {
                 onConfirm()
-                onClose()
               }}
-              aria-label={confirmText}
+              disabled={isLoading}
               className="flex-1 px-4 py-2 rounded bg-gray-900 dark:bg-gray-100 
                        text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 
-                       transition-colors text-sm font-medium"
+                       transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {confirmText}
+              {isLoading ? (
+                <span className="w-4 h-4 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin"></span>
+              ) : confirmText}
             </button>
           </div>
         </motion.div>

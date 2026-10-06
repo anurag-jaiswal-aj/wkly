@@ -74,26 +74,30 @@ function CalendarDay({ date, currentMonth, tasks, onTaskEdit, onTaskToggle, onAd
         {displayedTasks.map(task => (
           <div
             key={task.id}
-            className="text-xs p-1.5 rounded cursor-pointer hover:shadow-sm transition-shadow
-                     bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
-            onClick={() => onTaskEdit(task)}
+            className="text-xs p-1.5 rounded hover:shadow-sm transition-shadow
+                     bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center gap-1"
           >
-            <div className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={task.completed}
-                onChange={(e) => {
-                  e.stopPropagation()
-                  onTaskToggle(task.id, !task.completed)
-                }}
-                className="flex-shrink-0 w-3 h-3 rounded"
-              />
-              <span className={`truncate flex-1 ${task.completed ? 'line-through text-gray-500' : ''}`}>
+            <input
+              type="checkbox"
+              checked={task.completed}
+              onChange={(e) => {
+                e.stopPropagation()
+                onTaskToggle(task.id, !task.completed)
+              }}
+              aria-label={`Toggle ${task.title}`}
+              className="flex-shrink-0 w-3 h-3 rounded cursor-pointer"
+            />
+            <button
+              onClick={() => onTaskEdit(task)}
+              className="flex-1 text-left truncate outline-none rounded focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white cursor-pointer"
+              aria-label={`Edit task: ${task.title}`}
+            >
+              <span className={`${task.completed ? 'line-through text-gray-500' : ''}`}>
                 {task.title}
               </span>
-              {task.priority === 'high' && <span className="text-red-500">●</span>}
-              {task.priority === 'medium' && <span className="text-yellow-500">●</span>}
-            </div>
+            </button>
+            {task.priority === 'high' && <span className="text-red-500 flex-shrink-0">●</span>}
+            {task.priority === 'medium' && <span className="text-yellow-500 flex-shrink-0">●</span>}
           </div>
         ))}
         

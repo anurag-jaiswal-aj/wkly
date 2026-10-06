@@ -58,11 +58,9 @@ function TimeSlot({ hour, date, tasks, onTaskEdit, onTaskToggle, onAddTask }: Ti
           {hourTasks.map(task => (
             <div
               key={task.id}
-              onClick={() => onTaskEdit(task)}
-              className="cursor-pointer"
             >
               <div className="text-xs p-2 rounded bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-2">
+                <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
                     checked={task.completed}
@@ -70,17 +68,26 @@ function TimeSlot({ hour, date, tasks, onTaskEdit, onTaskToggle, onAddTask }: Ti
                       e.stopPropagation()
                       onTaskToggle(task.id, !task.completed)
                     }}
-                    className="flex-shrink-0 w-3 h-3 rounded"
+                    aria-label={`Toggle ${task.title}`}
+                    className="flex-shrink-0 w-3 h-3 mt-1 rounded cursor-pointer"
                   />
-                  <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : 'font-medium'}`}>
-                    {task.title}
-                  </span>
-                  {task.priority === 'high' && <span className="text-red-500 text-xs">●</span>}
-                  {task.priority === 'medium' && <span className="text-yellow-500 text-xs">●</span>}
+                  <button
+                    onClick={() => onTaskEdit(task)}
+                    className="flex-1 text-left outline-none rounded focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white cursor-pointer"
+                    aria-label={`Edit task: ${task.title}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : 'font-medium'}`}>
+                        {task.title}
+                      </span>
+                      {task.priority === 'high' && <span className="text-red-500 text-xs flex-shrink-0">●</span>}
+                      {task.priority === 'medium' && <span className="text-yellow-500 text-xs flex-shrink-0">●</span>}
+                    </div>
+                    {task.description && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{task.description}</p>
+                    )}
+                  </button>
                 </div>
-                {task.description && (
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-1">{task.description}</p>
-                )}
               </div>
             </div>
           ))}
