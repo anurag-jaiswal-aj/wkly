@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/contexts/ToastContext'
 import { motion } from 'framer-motion'
@@ -11,6 +11,8 @@ export default function Login() {
   const { signIn } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/planner'
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -23,7 +25,7 @@ export default function Login() {
       setLoading(false)
     } else {
       toast.showSuccess('Welcome back!')
-      navigate('/planner')
+      navigate(from, { replace: true })
     }
   }
 
@@ -68,6 +70,14 @@ export default function Login() {
               className="input-base"
               required
             />
+            <div className="mt-2 text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-gray-500 hover:text-black dark:hover:text-white"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button

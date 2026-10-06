@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/contexts/ToastContext'
 import { motion } from 'framer-motion'
@@ -12,6 +12,8 @@ export default function Register() {
   const { signUp } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/planner'
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -28,14 +30,26 @@ export default function Register() {
 
     setLoading(true)
 
-    const { error } = await signUp(email, password)
+    const { data, error } = await signUp(email, password)
 
     if (error) {
       toast.showError(error.message)
       setLoading(false)
     } else {
-      toast.showSuccess('Account created successfully!')
-      navigate('/planner')
+      const responseData = data as { user?: { identities?: unknown[] }; session?: unknown }
+      if (responseData?.user?.identities && responseData.user.identities.length === 0) {
+        toast.showError('An account with this email already exists.')
+        setLoading(false)
+      } else {
+        // Check if session was returned to handle email confirmation
+        if (responseData?.session) {
+          toast.showSuccess('Account created successfully!')
+          navigate(from, { replace: true })
+        } else {
+          toast.showSuccess('Check your email to confirm your account.')
+          setLoading(false)
+        }
+      }
     }
   }
 
