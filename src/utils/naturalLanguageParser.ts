@@ -33,7 +33,7 @@ const DAY_KEYWORDS = {
   sun: () => nextSunday(new Date())
 }
 
-const TIME_PATTERN = /(\d{1,2})(?::(\d{2}))?\s*(am|pm|AM|PM)?/
+
 const DATE_PATTERNS = [
   /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/, // MM/DD or MM/DD/YYYY
   /(\d{4})-(\d{1,2})-(\d{1,2})/, // YYYY-MM-DD
@@ -49,10 +49,15 @@ export function parseNaturalLanguage(input: string): ParsedTask {
   // Extract priority
   for (const [level, keywords] of Object.entries(PRIORITY_KEYWORDS)) {
     for (const keyword of keywords) {
-      const regex = new RegExp(`\\b${keyword}\\b`, 'gi')
+      // If the keyword contains only punctuation (like '!!!'), \b won't work correctly.
+      const isPunctuation = /^[^\w\s]+$/.test(keyword)
+      const regex = isPunctuation
+        ? new RegExp(`(?:^|\\s)${keyword.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1")}(?:\\s|$)`, 'gi')
+        : new RegExp(`\\b${keyword}\\b`, 'gi')
+
       if (regex.test(remainingText)) {
         priority = level as 'low' | 'medium' | 'high'
-        remainingText = remainingText.replace(regex, '').trim()
+        remainingText = remainingText.replace(regex, ' ').trim()
         break
       }
     }
@@ -60,17 +65,20 @@ export function parseNaturalLanguage(input: string): ParsedTask {
   }
 
   // Extract time
-  const timeMatch = remainingText.match(new RegExp(`\\bat\\s+${TIME_PATTERN.source}|${TIME_PATTERN.source}`, 'i'))
+  // Match either: "at 5", "at 5:30", "at 5pm", "5:30pm", "5pm", or "15:00"
+  // But avoid accidentally matching just "02" in "02/15"
+  const timeRegex = /\b(?:at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?|(\d{1,2}):(\d{2})\s*(am|pm)?|(\d{1,2})(?::(\d{2}))?\s*(am|pm))\b/i
+  const timeMatch = remainingText.match(timeRegex)
   if (timeMatch) {
-    let hours = parseInt(timeMatch[1] || timeMatch[4])
-    const minutes = timeMatch[2] || timeMatch[5] || '00'
-    const meridiem = (timeMatch[3] || timeMatch[6] || '').toLowerCase()
+    let hours = parseInt(timeMatch[1] || timeMatch[4] || timeMatch[7])
+    const minutes = timeMatch[2] || timeMatch[5] || timeMatch[8] || '00'
+    const meridiem = (timeMatch[3] || timeMatch[6] || timeMatch[9] || '').toLowerCase()
 
     if (meridiem === 'pm' && hours < 12) hours += 12
     if (meridiem === 'am' && hours === 12) hours = 0
 
     time = `${hours.toString().padStart(2, '0')}:${minutes}`
-    remainingText = remainingText.replace(timeMatch[0], '').trim()
+    remainingText = remainingText.replace(timeMatch[0], ' ').trim()
   }
 
   // Extract date from keywords (tomorrow, friday, etc.)
@@ -90,7 +98,7 @@ export function parseNaturalLanguage(input: string): ParsedTask {
       if (match) {
         try {
           let parsedDate: Date | null = null
-          
+
           if (pattern === DATE_PATTERNS[0]) {
             // MM/DD or MM/DD/YYYY
             const month = parseInt(match[1])

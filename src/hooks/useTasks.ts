@@ -1,18 +1,31 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Task, Tag } from '@/types'
 import { startOfWeek, endOfWeek, format } from 'date-fns'
+import { applyRealtimeEvent } from '@/lib/realtimeTasks'
+import { calculateNextDate } from '@/utils/recurrence'
 
 export function useTasks(weekStart: Date, searchQuery?: string, onError?: (message: string) => void) {
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasks, setTasksState] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+
+  const tasksRef = useRef<Task[]>([])
+
+  const setTasks = useCallback((action: Task[] | ((prev: Task[]) => Task[])) => {
+    setTasksState((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      tasksRef.current = next;
+      return next;
+    });
+  }, []);
 
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
   const startDate = format(startOfWeek(weekStart, { weekStartsOn: 1 }), 'yyyy-MM-dd')
   const endDate = format(weekEnd, 'yyyy-MM-dd')
 
-  const fetchTasks = useCallback(async () => {
+  const fetchTasks = useCallback(async (options?: { abortSignal?: AbortSignal; background?: boolean }) => {
     try {
+      if (!options?.background) setLoading(true)
       let query = supabase
         .from('tasks')
         .select(`
@@ -21,12 +34,18 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
         `)
         .order('order_index', { ascending: true })
 
-      // If searching, get all tasks, otherwise filter by week
-      if (!searchQuery) {
+      // If searching, filter by search term, otherwise filter by week
+      if (searchQuery) {
+        // Safely escape quotes for the Supabase .or() syntax
+        const safeQuery = searchQuery.replace(/"/g, '""')
+        query = query.or(`title.ilike."%${safeQuery}%",description.ilike."%${safeQuery}%"`)
+      } else {
         query = query.gte('date', startDate).lte('date', endDate)
       }
 
       const { data, error } = await query
+
+      if (options?.abortSignal?.aborted) return
 
       if (error) {
         console.error('Supabase query error:', error)
@@ -42,36 +61,87 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
 
       setTasks(tasksWithTags || [])
     } catch (error) {
+      if (options?.abortSignal?.aborted) return
       console.error('Error fetching tasks:', error)
       onError?.('Failed to load tasks. Please refresh the page.')
     } finally {
-      setLoading(false)
+      if (!options?.abortSignal?.aborted && !options?.background) {
+        setLoading(false)
+      }
     }
-  }, [startDate, endDate, searchQuery, onError])
+  }, [startDate, endDate, searchQuery, onError, setTasks])
+
+  const inFlightTags = useRef<Set<string>>(new Set())
+
+  const fetchTaskTags = useCallback(async (taskId: string) => {
+    if (inFlightTags.current.has(taskId)) return;
+    inFlightTags.current.add(taskId);
+
+    try {
+      const { data, error } = await supabase
+        .from('task_tags')
+        .select('tag_id, tags(*)')
+        .eq('task_id', taskId)
+
+      if (!error && data) {
+        const tags = data.map(tt => tt.tags as unknown as Tag).filter(Boolean)
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, tags } : t))
+      }
+    } catch (e) {
+      console.error('Failed to fetch tags for task', taskId, e)
+    } finally {
+      inFlightTags.current.delete(taskId);
+    }
+  }, [setTasks]);
 
   useEffect(() => {
-    fetchTasks()
+    const abortController = new AbortController()
+    fetchTasks({ abortSignal: abortController.signal })
 
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('tasks-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tasks',
-        },
-        () => {
-          fetchTasks()
-        }
-      )
-      .subscribe()
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let isMounted = true;
+
+    const setupSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !isMounted) return;
+
+      channel = supabase
+        .channel(`tasks-changes-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            const result = applyRealtimeEvent(
+              tasksRef.current,
+              payload as import('@/lib/realtimeTasks').RealtimePayload,
+              searchQuery,
+              startDate,
+              endDate
+            );
+
+            setTasks(result.tasks);
+
+            for (const taskId of result.requireTagsForIds) {
+              fetchTaskTags(taskId);
+            }
+          }
+        )
+        .subscribe()
+    };
+
+    setupSubscription();
 
     return () => {
-      supabase.removeChannel(channel)
+      isMounted = false;
+      abortController.abort();
+      if (channel) supabase.removeChannel(channel)
     }
-  }, [fetchTasks])
+  }, [fetchTasks, startDate, endDate, searchQuery, setTasks, fetchTaskTags])
 
   const createTask = async (task: Omit<Task, 'id' | 'user_id' | 'created_at'>) => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -102,6 +172,9 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
   }
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
+    // Capture state for potential rollback
+    const previousTasks = tasksRef.current;
+
     // Optimistic update
     setTasks(prevTasks =>
       prevTasks.map(task =>
@@ -118,7 +191,7 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
 
     // Revert on error
     if (error) {
-      fetchTasks()
+      setTasks(previousTasks)
     }
 
     return { data, error }
@@ -144,26 +217,12 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
 
   const toggleTaskComplete = async (id: string, completed: boolean) => {
     // Find the task to check if it's recurring
-    const task = tasks.find(t => t.id === id)
+    const task = tasksRef.current.find(t => t.id === id)
     
-    // Optimistic update
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === id ? { ...task, completed } : task
-      )
-    )
-    
+    // Call updateTask which handles the optimistic update and rollback securely
     const result = await updateTask(id, { completed })
     
-    // Revert on error
-    if (result.error) {
-      setTasks(prevTasks =>
-        prevTasks.map(task =>
-          task.id === id ? { ...task, completed: !completed } : task
-        )
-      )
-      return result
-    }
+    if (result.error) return result
     
     // If task is being completed AND has recurrence, create next instance
     if (completed && task?.recurrence && task.recurrence !== 'none') {
@@ -192,27 +251,7 @@ export function useTasks(weekStart: Date, searchQuery?: string, onError?: (messa
     return result
   }
 
-  // Helper function to calculate next occurrence date
-  const calculateNextDate = (currentDate: string, recurrence: string): string => {
-    const date = new Date(currentDate)
-    
-    switch (recurrence) {
-      case 'daily':
-        date.setDate(date.getDate() + 1)
-        break
-      case 'weekly':
-        date.setDate(date.getDate() + 7)
-        break
-      case 'biweekly':
-        date.setDate(date.getDate() + 14)
-        break
-      case 'monthly':
-        date.setMonth(date.getMonth() + 1)
-        break
-    }
-    
-    return date.toISOString().split('T')[0]
-  }
+
 
   const reorderTasks = async (taskId: string, newDate: string, newOrderIndex: number, newTime?: string) => {
     const updates: Partial<Task> = { 

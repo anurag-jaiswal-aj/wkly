@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useTasks } from '@/hooks/useTasks'
 import { useTags } from '@/hooks/useTags'
@@ -38,7 +39,7 @@ export default function Planner() {
   // Offline queue management
   const { isOnline, queueCount, isSyncing } = useOfflineQueue()
   
-  const { tasks, loading, createTask, updateTask, deleteTask, toggleTaskComplete, reorderTasks } = useTasks(
+  const { tasks, loading, createTask, updateTask, deleteTask, toggleTaskComplete, reorderTasks, refetch } = useTasks(
     weekStart, 
     debouncedSearchQuery,
     (error) => toast.showError(error)
@@ -202,44 +203,50 @@ export default function Planner() {
         const newIds = subtasks.filter(st => st.id).map(st => st.id)
         const toDelete = existingIds.filter(id => !newIds.includes(id))
         
-        for (const id of toDelete) {
-          await supabase.from('subtasks').delete().eq('id', id)
+        if (toDelete.length > 0) {
+          const { error: delError } = await supabase.from('subtasks').delete().in('id', toDelete)
+          if (delError) throw delError
         }
         
-        // Update or create subtasks
-        for (const subtask of subtasks) {
-          if (subtask.id) {
-            // Update existing
-            await supabase
-              .from('subtasks')
-              .update({
-                title: subtask.title,
-                completed: subtask.completed,
-                order_index: subtask.order_index
-              })
-              .eq('id', subtask.id)
-          } else {
-            // Create new
-            await supabase
-              .from('subtasks')
-              .insert([{
-                task_id: editingTask.id,
-                title: subtask.title,
-                completed: subtask.completed || false,
-                order_index: subtask.order_index || 0
-              }])
-          }
+        // Update or create subtasks in bulk if possible
+        const toUpdate = subtasks.filter(st => st.id).map(st => ({
+          id: st.id,
+          task_id: editingTask.id,
+          title: st.title,
+          completed: st.completed,
+          order_index: st.order_index
+        }))
+
+        const toInsert = subtasks.filter(st => !st.id).map(st => ({
+          task_id: editingTask.id,
+          title: st.title,
+          completed: st.completed || false,
+          order_index: st.order_index || 0
+        }))
+
+        if (toUpdate.length > 0) {
+          const { error: updateError } = await supabase.from('subtasks').upsert(toUpdate)
+          if (updateError) throw updateError
+        }
+
+        if (toInsert.length > 0) {
+          const { error: insertError } = await supabase.from('subtasks').insert(toInsert)
+          if (insertError) throw insertError
         }
         
         // Handle tags - delete all and recreate
-        await supabase.from('task_tags').delete().eq('task_id', editingTask.id)
+        const { error: tagDelError } = await supabase.from('task_tags').delete().eq('task_id', editingTask.id)
+        if (tagDelError) throw tagDelError
+
         if (tags.length > 0) {
-          await supabase.from('task_tags').insert(
+          const { error: tagInsError } = await supabase.from('task_tags').insert(
             tags.map(tag => ({ task_id: editingTask.id, tag_id: tag.id }))
           )
+          if (tagInsError) throw tagInsError
         }
         
         toast.showSuccess('Task updated successfully')
+        refetch({ background: true })
       } else {
         // Only include defined fields to handle missing database columns gracefully
         const taskToCreate: Record<string, unknown> = {
@@ -265,26 +272,26 @@ export default function Planner() {
         
         // Create subtasks for new task
         if (result.data && subtasks.length > 0) {
-          for (const subtask of subtasks) {
-            await supabase
-              .from('subtasks')
-              .insert([{
-                task_id: result.data.id,
-                title: subtask.title,
-                completed: subtask.completed || false,
-                order_index: subtask.order_index || 0
-              }])
-          }
+          const toInsert = subtasks.map(st => ({
+            task_id: result.data.id,
+            title: st.title,
+            completed: st.completed || false,
+            order_index: st.order_index || 0
+          }))
+          const { error: subtaskError } = await supabase.from('subtasks').insert(toInsert)
+          if (subtaskError) throw subtaskError
         }
         
         // Create task tags
         if (result.data && tags.length > 0) {
-          await supabase.from('task_tags').insert(
+          const { error: tagError } = await supabase.from('task_tags').insert(
             tags.map(tag => ({ task_id: result.data.id, tag_id: tag.id }))
           )
+          if (tagError) throw tagError
         }
         
         toast.showSuccess('Task created successfully')
+        refetch({ background: true })
       }
       setEditingTask(null)
       setDefaultDate('')
@@ -304,6 +311,7 @@ export default function Planner() {
     if (error) {
       toast.showError('Failed to sign out. Please try again.')
     }
+    setShowSignOutConfirm(false)
   }, [signOut, toast])
 
   // Memoize filter function to avoid recreating on every render
@@ -474,6 +482,15 @@ export default function Planner() {
             >
               <span className="material-symbols-outlined text-xl" aria-hidden="true">help</span>
             </button>
+
+            <Link
+              to="/settings"
+              aria-label="Account Settings"
+              className="text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              title="Settings"
+            >
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">settings</span>
+            </Link>
 
             <button
               onClick={handleSignOut}
